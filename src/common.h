@@ -37,7 +37,6 @@
 # include <unistd.h>
 # include <sys/file.h>
 # include <sys/time.h>
-# include <rpc/rpc.h>
 # include <dirent.h>
 # ifndef DllExport
 #  define DllExport

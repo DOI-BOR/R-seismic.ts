@@ -1,2 +1,4 @@
 useDynLib(seismic.ts, .registration = TRUE)
+importFrom("methods", "is")
+importFrom("stats", "acf", "fft", "filter", "is.mts", "toeplitz", "ts")
 exportPattern("^[[:alpha:]]+")
