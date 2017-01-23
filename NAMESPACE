@@ -1,0 +1,2 @@
+useDynLib(seismic.ts, .registration = TRUE)
+exportPattern("^[[:alpha:]]+")
