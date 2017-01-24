@@ -36,7 +36,8 @@ static double *mk_taper(int *thlen, int len, TaperType type, double ptap, BOOL d
 	if ( thlen == NULL || (do_norm == TRUE && norm_wt == NULL) )
 
 	/* taper 1/2-length in samples */
-	*thlen = thl = MIN(ROUND(len * ptap / 100), len / 2);
+	thl = MIN(ROUND(len * ptap / 100), len / 2);
+	*thlen = thl;
 
 	if ( (wt = calloc(thl, sizeof(*wt))) == NULL )
 		oops("taper","can't get space for taper");

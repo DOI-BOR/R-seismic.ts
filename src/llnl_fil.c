@@ -614,7 +614,6 @@ static int lptbp(
 	complex ctemp, p1, p2;
 	double twopi;
 	complex z1, z2;
-	double pi;
 
 	/* Parameter adjustments */
 	rtype -= 3;
@@ -622,7 +621,6 @@ static int lptbp(
 	--p;
 
 	/* Function Body */
-	pi = M_PI;
 	twopi = 2 * M_PI;
 	a = twopi * twopi * *fl * *fh;
 	b = twopi * (*fh - *fl);
@@ -952,7 +950,6 @@ static int lptbr(
 	complex ctemp, p1, p2;
 	double twopi;
 	complex z1, z2;
-	double pi;
 
 	/* Parameter adjustments */
 	--sd;
@@ -962,7 +959,6 @@ static int lptbr(
 	--p;
 
 	/* Function Body */
-	pi = M_PI;
 	twopi = 2 * M_PI;
 	a = twopi * twopi * *fl * *fh;
 	b = twopi * (*fh - *fl);

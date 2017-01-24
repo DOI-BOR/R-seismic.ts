@@ -157,6 +157,8 @@ DllExport SEXP CALLfilter_ts(SEXP ts_d, SEXP dt_d, SEXP order_i, SEXP pb_type_s,
 		error("time series must have at least 3 points");
 	if ( dt <= 0 )
 		error("dt must be positive");
+	if ( order < 1 || order > 8 )
+		error("filter order must be between 1 and 8");
 
 	if ( (fts = calloc(len, sizeof(*fts))) == NULL )
 		oops("CALLfilter_ts", "Can't get space");

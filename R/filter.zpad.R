@@ -1,5 +1,5 @@
 # zero-pad input and filter to avoid wrap-around effects
-my.filter <- function(x, f, truncate = F) {
+filter.zpad <- function(x, f, truncate = F) {
 	x.len <- length(x)
 	f.len <- length(f)
 	aug.len <- x.len + f.len - 1 # actual length of filtered time series
