@@ -38,12 +38,12 @@
 #' @details Wraps a modified version of the SAC code, which was converted from Fortran
 #' to C at the University of Washington
 #' @examples
-#' dirac <- c(0,1,rep(0,998))
+#' dirac <- c(rep(0,1000),1,rep(0,1000))
 #' dt <- 0.01
-#' f.lo <- 5 / (length(dirac) * dt)
-#' f.hi <-  (1 / 5) * 2 / dt
-#' impulse.response <- filter.llnl(dirac, dt, order=5, pb.type="bp",
-#'                          filt.type="be", f.lo=f.lo, f.hi=f.hi, dir="zp")
+#' f.lo <- 20 / (length(dirac) * dt)
+#' f.hi <-  (2 / 5) * 1 / (2 * dt)
+#' impulse.response <- ts(filter.llnl(dirac, dt, order=8, pb.type="bp", filt.type="be",
+#'                        f.lo=f.lo, f.hi=f.hi, dir="zp"), start=0, deltat=dt)
 #' filt.spec <- spec.pgram(impulse.response,plot=FALSE)
 #' ymax <- 1.2 * 10 ^ round(log10(max(filt.spec$spec)),digits=0)
 #' ymin <- 0.8 * 10 ^ (round(log10(max(filt.spec$spec)),digits=0) - 8)
