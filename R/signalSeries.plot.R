@@ -1,3 +1,12 @@
+#' Plot a signalSeries Object
+#'
+#' This function plots \code{\link{signalSeries}} onjects from
+#' package \pkg{splus2R}, and provides additional functionality for
+#' multivariate time series.
+#'
+#' @param x,y \code{\link{signalSeries}} object(s) from which to extract element(s)
+#' or in which to replace element(s).
+#' @param ... arguments to \code{\link{plot}}.
 setMethod("plot","signalSeries",
 function (x, y, ..., main = NULL, ylab = x@units[1], xlab = x@units.position,
 					top.ticks = FALSE, right.ticks = FALSE, reference.grid = TRUE,

@@ -1,3 +1,15 @@
+#' Extract or Replace Parts of a signalSeries Object
+#'
+#' This operator acts on \code{\link{signalSeries}} objects from
+#' package \pkg{splus2R}, and provides additional functionality for
+#' multivariate time series.
+#'
+#' @param x \code{\link{signalSeries}} object from which to extract element(s)
+#' or in which to replace element(s).
+#' @param i,j,... indices specifying elements to extract or replace. Indices
+#' are \code{link{numeric}} vectors, or empty or \code{NULL}.
+#' @param drop For matrices or arrays. If \code{TRUE} the result is coerced to the
+#' lowest possible dimension.
 setMethod("[","signalSeries",
 function (x, i, j, ..., drop = TRUE)
 {

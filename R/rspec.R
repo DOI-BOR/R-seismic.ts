@@ -1,16 +1,17 @@
 #' Elastic response spectrum
 #'
-#' \code{rspec} is used to compute the elastic response spectrum a univariate
+#' \code{rspec} computes the elastic response spectrum a univariate
 #' time series.
 #'
 #' @param ts Equally-sampled input series. Must convert to numeric vector.
 #' @param dt Sample interval, in seconds. Default is 0.01.
-#' @param ts.type Input type. One of "acceleration", "velocity", or
-#' "displacement". Can be abbreviated to just one character, and is case independent.
-#' Default is "velocity"
-#' @param rs.type Response spectrum type. One of "acceleration", "velocity", or
-#' "displacement" for pseudo-absolute acceleration, psuedo-relative velocity, or
-#' relative displacement response spectra, erspectively. Default is "acceleration".
+#' @param ts.type String indicating input type: \code{c("acceleration", "velocity",
+#' "displacement")}. Can be abbreviated to just one character, and is case independent.
+#' Default is \code{"velocity"}.
+#' @param rs.type Response spectrum type: \code{c("acceleration", "velocity",
+#' "displacement")} for pseudo-absolute acceleration, psuedo-relative velocity, or
+#' relative displacement response spectra, respectively. Default is
+#' \code{"acceleration"}.
 #' @param ptap Percentage of data window to apply a Hanning taper. Must be
 #' between 0 and 50. Default is 0.
 #' @param damp Damping value(s) to use. Default is 0.05
@@ -28,8 +29,8 @@
 #' }
 #' Note that these methods may give very different results for periods < ~5 * dt.
 #' @param tau.si.range Period range to compute spectrum intensity. Default
-#' is 0.1-0.5 seconds for acceleration, 0.1-2.5 for velocity, and 0.1-max_period for
-#' displacement.
+#' is \code{c(0.1,0.5)} seconds for acceleration, \code{c(0.1,2.5)} seconds
+#' for velocity, and \code{c(0.1,max_period)} seconds for displacement.
 #'
 #' @return A \code{list} with the complete response spectra information, including:
 #' damping values, spectral periods, response spectra and spectrum intensity
@@ -37,6 +38,8 @@
 #' response spectra type, units, etc. The specific list returned is:
 #' \code{list(damping, periods, rspect, rs.type, rs.units, rs.method,
 #' 			 SI, SI.per.range, SI.units)}
+#'
+#' @keywords ts
 rspec <- function(ts, dt=0.01, ts.type="vel", rs.type="acc", ptap=NA,
 									damp=NA, tau.range=NA, periods=NA,
 									rs.meth=NA, tau.si.range=NA) {

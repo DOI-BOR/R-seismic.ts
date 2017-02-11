@@ -1,25 +1,27 @@
-#' Filter a Time Series
+#' Filter a Univariate Time Series
 #'
 #' @description
-#' \code{filter.llnl} filters a univariate time series.
+#' \code{filter.llnl} filters a univariate time series using the digital
+#' equivalents of common analog filter types. It is derived from the
+#' Seismic Analysis Code (SAC) package from Lawrence Livermore National Labs.
 #'
 #' @param xt Equally-sampled input series. Must convert to numeric vector.
 #' @param dt Sample interval, in seconds. Default is 0.01.
 #' @param order Order of filter, between 1 and 8. Default is 4.
 #' @param pb.type \describe{
-#' \item{band pass}{c("bp","bandpass","band-pass")}
-#' \item{band reject (notch)}{c("br","bandreject",band-reject","notch")}
-#' \item{low pass}{c("lp","lowpass","low-pass")}
-#' \item{high pass}{c("hp","highpass","high-pass")}
+#' \item{band pass}{\code{c("bp","bandpass","band-pass")}}
+#' \item{band reject (notch)}{\code{c("br","bandreject","band-reject","notch")}}
+#' \item{low pass}{\code{c("lp","lowpass","low-pass")}}
+#' \item{high pass}{\code{c("hp","highpass","high-pass")}}
 #' }
 #' Characters are case-insensitive, and only need to uniquely
 #' define the option (e.g., "L" is sufficient to select low pass). Default is
 #' bandpass.
 #' @param filt.type \describe{
-#' \item{Butterworth}{c("bu","butterworth")}
-#' \item{Bessel}{c("be","bessel")}
-#' \item{Chebyshev Type I}{("c1","Chebyshev1","Chebyshev-Type-I")}
-#' \item{Chebyshev Type II}{("c2","Chebyshev2","Chebyshev-Type-II")}
+#' \item{Butterworth}{\code{c("bu","butterworth")}}
+#' \item{Bessel}{\code{c("be","bessel")}}
+#' \item{Chebyshev Type I}{\code{c("c1","Chebyshev1","Chebyshev-Type-I")}}
+#' \item{Chebyshev Type II}{\code{c("c2","Chebyshev2","Chebyshev-Type-II")}}
 #' }
 #' Characters are case-insensitive, and only need to uniquely
 #' define the option (e.g., "BE" is sufficient to select Bessel). Default is
@@ -27,7 +29,7 @@
 #' @param f.lo Low-pass filter corner frequency, in Hz. Default is 2 / (len(xt) * dt).
 #' @param f.hi Hi-pass filter corner frequency, in Hz. Default is 1 / (3 * dt), which
 #' is 1/3 of the Nyquist frequency.
-#' @param dir Filter direction: c("forward", "reverse", "zp", "both", "zerophase").
+#' @param dir Filter direction: \code{c("forward", "reverse", "zp", "both", "zerophase")}.
 #' Characters are case-insensitive, and only need to uniquely define
 #' the option (e.g., "F" is sufficient to select Forward). Default is zero-phase.
 #' @param cheb.sb.atten Chebyshev stop band attenuation (ignored for
@@ -35,8 +37,9 @@
 #' @param cheb.tr.bw Chebyshev transition bandwidth between stop and pass
 #' bands(ignored for others), as a fraction of the passband width. Default is 0.3.
 #' @return The filtered time series.
-#' @details Wraps a modified version of the SAC code, which was converted from Fortran
-#' to C at the University of Washington
+#' @details Wraps a modified version of the SAC filter code, which in turn was
+#' based on a conversion of the original Fortran code to C at the University
+#' of Washington.
 #' @examples
 #' dirac <- c(rep(0,1000),1,rep(0,1000))
 #' dt <- 0.01
