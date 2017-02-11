@@ -7,6 +7,7 @@
 #' @param dt (optional) sample interval, in seconds. Default is 0.01
 #' @param freq.range (optional) to limit output spectrum to. Default is 0-Nyquist
 #' @return list with the amplitude spectrum and frequency increment
+#' @keywords ts
 fas <- function(xt, dt = 0.01, freq.range = NA) {
 
 	kind.hiRes <- 1

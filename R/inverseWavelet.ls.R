@@ -1,13 +1,27 @@
-# least-squares inverse f = x^-1 from directly solving
-#		f * x = {0,...,1,0,...}
-# finds optimal lag for a given length inverse,
-# unless fixed.lag is set to a specified lag
+#' Least-squares inverse of a time series
+#'
+#' \code{inverseWavelet.ls} finds the least-squares inverse of an
+#' input univariate time series
+#'
+#' @param wavelet Equally-sampled input series. Must convert to numeric vector.
+#' @param inv.len Length of inverse (default is twice the input length)
+#' @param fixed.lag Lag used for solving inverse (default is to find optimal lag)
+#'
+#' @details Determines the inverse f = x^-1 by solving f * x = {0,...,1,0,...}
+#' in the least-squares sense. Unlike \code{\link{inverseWavelet}}, this
+#'function works with input signals that are not minimum phase.
+#' @return List with the inverse and various measures.
+#' @seealso \code{\link{inverseWavelet}}, \code{\link{minimum.phase}}
+#'
+#' @keywords ts
+
 inverseWavelet.ls <- function(wavelet, inv.len = NA, fixed.lag = NA) {
 
 	x <- as.vector(wavelet)
 	x.len <- length(x)
 	# get inverse filter length
-	#	note: the best-performing filter will be infinite length, but as a compromise, use input length (or twice input length)
+	#	note: the best-performing filter will be infinite length,
+	# but as a compromise, use input length (or twice input length)
 	if ( is.na(inv.len) )
 		inv.len <- 2 * x.len
 	f.len <- inv.len

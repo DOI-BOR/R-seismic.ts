@@ -1,10 +1,27 @@
-# Note:  this function uses acf(), which by default de-means
-# the series, so if the desired output z has non-zero mean, the
-# output filter will be for de-meaned z. The returned value of
-# estimated z will add the mean back in. For long time series,
-# we could just correct for the means, but this won't	work for
-# short wavelets since the time series are not assumed to repeat.
-wienerFilter <- function(x.data, z.data, length.filt = NULL, lag = NULL, demean = FALSE) {
+#' Determine a Wiener (least-squares) filter
+#'
+#' \code{wienerFilter} finds the optimal filter, in the least-squares sense,
+#' that transforms a specified univariate input time series to a specified
+#' univariate target output time series.
+#'
+#' @param x.data Equally-sampled input series. Must convert to numeric vector.
+#' @param z.data Equally-sampled target output series. Must convert to numeric vector.
+#' @param length.filt Length of filter (default is 0.2 the input length)
+#' @param lag Lag used for determing the filter (default is 0)
+#' @param demean Should windowed data be demeaned? Default is FALSE.
+#'
+#' @details Uses \code{\link{acf}}, which by default de-means the series, so if
+#' the desired output z has non-zero mean, the output filter will be for
+#' de-meaned z. The returned value of estimated z will add the mean back in.
+#' For long time series, we could just correct for the means, but this won't
+#' work for short wavelets since the time series are not assumed to repeat.
+#' @return List with the Wiener filter and various measures.
+#' @seealso \code{\link{acf}}
+#'
+#' @keywords ts
+
+wienerFilter <- function(x.data, z.data, length.filt = NULL, lag = NULL,
+                         demean = FALSE) {
 
 	# check the lag value
 	if ( is.null(lag) )

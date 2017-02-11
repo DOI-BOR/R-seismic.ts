@@ -8,6 +8,7 @@
 #' @param dt (optional) sample interval, in seconds
 #' @param in.units (optional). Units of input vector, density, and mu. "mks" or "cgs"
 #' @return a list with the the total energy and units
+#' @keywords ts
 ei <- function(vt, dt=0.01, dens=2.7, mu=3e11, in.units="cgs") {
 
 	len <- length(vt)

@@ -1,16 +1,20 @@
-# Decimate an augmented time series by a factor not greater
-# than 1/aug_factor
-#   note: low-pass filtering is assumed to not be needed
-#		because the data was augmented, or has been suitably
-#		filtered. This method should not be used to decimate
-# 	a time series that has non-zero spectral amplitudes
-#		for frequencies above 1 / (dt * factor)
-# Required Arguments:
-#		x.data:
-#			series, signalSeries, or vector data
-# Optional Arguments
-#		factor:
-#			Decimation factor. If factor = N, then dt -> dt * N
+#' Decimate an Augmented Time Series
+#'
+#' @description
+#' \code{decimate} down-samples a real, univariate time series that has
+#' been augmented, or suitably low-pass filtered.
+#'
+#' @param x.data Equally-sampled input series, signalSeries, or vector.
+#' Must convert to a numeric vector.
+#' @param factor Decimation factor (default is 1). If factor = N,
+#' then dt -> dt * N
+#' @return The decimated time series.
+#' @details low-pass filtering is assumed to not be needed because the input
+#' time series was augmented, or has been suitably filtered. This function
+#' should not be used to decimate a time series that has non-zero spectral
+#' amplitudes for frequencies above 1 / (dt * factor).
+#' @seealso \code{\link{signalSeries}}
+#' @keywords ts
 decimate <- function(x.data, factor = NA) {
 	if ( is.na(factor) )
 		factor = 1.;

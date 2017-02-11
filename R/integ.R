@@ -1,3 +1,17 @@
+#' Integrate a time series
+#'
+#' \code{integ} integrates a univariate or multivariate time series.
+#'
+#' @param x.data Equally-sampled input series. Must convert to a numeric
+#' \code{\link{vector}}, \code{\link{signalSeries}}, or \code{\link{ts}}.
+#' @param dt Sample interval. Default is 0.01 seconds.
+#'
+#' @details These are generic functions. Integration is performed by \code{\link{cumsum}}.
+#' @return List containing the cumulative sum, and the integrated time series.
+#' @seealso \code{\link{cumsum}}
+#' @keywords ts
+#'
+
 integ.default <- function(x.data, dt=0.01) {
 	multi.trace <- is.matrix(x.data) || length(dim(x.data)) > 1
 
@@ -26,6 +40,7 @@ integ.default <- function(x.data, dt=0.01) {
 }
 setGeneric("integ",def=integ.default)
 
+#' @describeIn integ.default integrates a \code{ts}
 integ.ts <- function(x.data, dt=NA) {
 	multi.trace <- is.mts(x.data)
 
@@ -57,6 +72,7 @@ integ.ts <- function(x.data, dt=NA) {
 }
 setMethod("integ","ts",integ.ts)
 
+#' @describeIn integ.default integrates a \code{signalSeries}
 integ.signalSeries <- function(x.data, dt=NA) {
 	multi.trace <- ! is.null(dim(x.data))
 

@@ -1,4 +1,12 @@
-# direct circular convolution
+#' Direct Circular Convolution
+#'
+#' @description
+#' \code{circConv} performs a direct circular convolution of its arguments.
+#'
+#' @param x Equally-sampled input series. Must convert to a numeric vector.
+#' @param filt Equally-sampled filter series. Must convert to a numeric vector.
+#' @return The convolved time series.
+#' @keywords ts
 circConv <- function(x, filt) {
 	xt <- as.vector(x)
 	nx <- length(xt)

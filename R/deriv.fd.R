@@ -1,4 +1,4 @@
-#' Compute the derivative of a time series using the finite difference method.
+#' Derivative of a time series using finite difference method
 #'
 #' \code{deriv.fd} is used to compute the derivative of a numerical vector
 #' using the finite difference method.
@@ -12,6 +12,7 @@
 #' @param pct (optional) percentage of data window to apply a Hanning taper. Must be
 #' between 0 and 50. Default is 0.
 #' @return the derivative of the windowed data
+#' @keywords ts
 deriv.fd <- function(xt, dt=0.01, nd=1, order=8, pct=NA) {
 
 	xt <- as.double(xt[!is.na(xt)])

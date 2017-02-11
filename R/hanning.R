@@ -1,4 +1,21 @@
-# Generalized Hann (Tukey) window
+#' Apply a generalized Hann (Tukey) window
+#'
+#' @description
+#' \code{hanning} takes an input time series and multiplies it with a
+#' generalized Hann (Tukey) window. The input time series can be univariate
+#' or multivariate.
+#'
+#' @param x.data Equally-sampled input series. Must convert to a numeric vector.
+#' @param pct Percentage of data window to apply a taper. Must be
+#' between 0 and 50. Default is 0 (no taper).
+#' @param demean Should windowed data be demeaned? Default is F.
+#' @return The windowed time series.
+#' @details For factor > 1, this code augments by zero-padding the Fourier
+#' transform of the input series at frequencies greater than the Nyquist,
+#' and then taking the inverse transform.
+#' @seealso \code{\link{windowTs}}
+#' @keywords ts
+
 hanning <- function(x.data, pct = NA, demean = FALSE) {
 
 	multi.trace <- is.mts(x.data) || is.matrix(x.data) || length(dim(x.data)) > 1 ||

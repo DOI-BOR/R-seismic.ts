@@ -1,14 +1,18 @@
-# zero pad input series to padded.len (if defined), or to the
-# next power of two
-# Required Arguments:
-#		x.data:
-#			vector data
-# Optional Arguments
-#		padded.len:
-#			if padded.len = NA, then pad the current lenght to the
-#			next power of two.
-#		extra: If extra = TRUE, and padded.len=NA, then pad
-#			to the next next power of two
+#' Zero-pad a univariate time series
+#'
+#' \code{zero.pad} adds zeros to the end of an input timte series. The number
+#' of added zeros can be specified, or, by default, enough zeros are added to
+#' make the length a power of 2.
+#'
+#' @param x.data Equally-sampled input series. Must convert to numeric vector.
+#' @param padded.len Length of input series after zero-padding. Default is to pad
+#' the input until the length is the next power of 2.
+#' @param extra If padded.len is not set, then pad the input data to the
+#' next-next power of 2.
+#' @return the zero-padded data.
+
+#' @keywords ts
+
 zero.pad <- function(x.data, padded.len = NA, extra = FALSE) {
 	x <- as.vector(x.data)
 	n = length(x)

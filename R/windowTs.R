@@ -2,18 +2,22 @@
 #'
 #' \code{windowTs} windows and tapers a time series.
 #'
-#' @param xt required (actual) equally-sampled input series. Must convert to numeric vector.
-#' @param dt (optional) sample interval, in seconds. Default is 0.01.
-#' @param t0 (optional) start time of window, in sec. Default is 0.
-#' @param tw (optional) window length, in sec. Default is len*dt - start.
-#' @param demean (optional) should windowed data be demeaned? Default is F.
-#' @param pct (optional) percentage of data window to apply a taper. Must be
+#' @param xt Equally-sampled input series. Must convert to
+#' numeric vector.
+#' @param dt Sample interval, in seconds. Default is 0.01.
+#' @param t0 Start time of window, in sec. Default is 0.
+#' @param tw Window length, in sec. Default is len*dt - start.
+#' @param demean Should windowed data be demeaned? Default is F.
+#' @param pct Percentage of data window to apply a taper. Must be
 #' between 0 and 50. Default is 0 (no taper).
-#' @param type (optional). Taper type. Values are c("Hanning", "Bartlett", "Parzen",
+#' @param type Taper type. Values are c("Hanning", "Bartlett", "Parzen",
 #' "Blackmann-Harris", "Exact_Blackmann"). Default is "Hanning"
-#' @param norm (optional) normalize tapered data to preserve rms. Default is F
+#' @param norm Normalize tapered data to preserve rms. Default is F
 #'
 #' @return the windowed, demeaned, and tapered data
+#' @seealso \code{\link{hanning}}
+#' @keywords ts
+
 windowTs <- function(xt, dt=0.01, t0=NA, tw=NA, demean=NA, pct=NA, type=NA, norm=NA) {
 
 	xt <- as.double(xt[!is.na(xt)])

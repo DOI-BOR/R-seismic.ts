@@ -1,11 +1,15 @@
-#' Window and taper a time series.
+#' Hilbert Transform of a time series using FIR filter method
 #'
-#' \code{hilbert.fir} return the Hilbert transform using a FIR filter.
+#' \code{hilbert.fir} returns the Hilbert transform of a univariate
+#' time series using using a FIR filter approach.
 #'
-#' @param xt required (actual) equally-sampled input series. Must convert to numeric vector.
-#' @param dt (optional) sample interval, in seconds. Default is 0.01.
+#' @param xt Equally-sampled input series. Must convert to numeric vector.
+#' @param dt Sample interval, in seconds. Default is 0.01.
 #'
 #' @return the Hilbert transform of the data
+#' @seealso \code{\link{hilbert}}
+#' @keywords ts
+
 hilbert.fir <- function(xt, zero.pad = TRUE, dt = 0.01) {
 
 	xt <- as.double(xt[!is.na(xt)])

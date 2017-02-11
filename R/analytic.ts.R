@@ -1,15 +1,28 @@
-# returns f(t) - i * hilbert(f(t))
-#	uses property that f(t) - i * hilbert(f(t)) <=> 2 * H(omega) * F(omega)
-#	where H() is the Heaviside function, and f(t) <=> F(omega)
-
-analytic.ts <- function(x.data) {
+#' Compute the Analytic Signal
+#'
+#' @description
+#' \code{analytic.ts} computes the analytic signal of a real,
+#' univariate or multivariate time series.
+#'
+#' @param xt Equally-sampled input time series. Must convert to a
+#' numeric vector or matrix.
+#' @details The analytic signal s(t) of a function f(t) is defined
+#' by s(t) = f(t) - i * Hilbert(f(t)), where H(f(t)) is the Hilbert
+#' transform of f(t). This code uses the Fourier transform to compute
+#' the anatic signal, using the property that s(t) <=> 2 * H(omega) * F(omega),
+#' where H() is the Heaviside function, and f(t) <=> F(omega).
+#' @return The analytic signal of the input time series.
+#' @seealso \href{https://en.wikipedia.org/wiki/Analytic_signal}{Wikipedia}
+#' @keywords ts
+#'
+analytic.ts <- function(xt) {
 	# check for multi-trace input
-	multi.trace <- is.mts(x.data) || is.matrix(x.data) || length(dim(x.data)) > 1 ||
-		( is(x.data, "signalSeries") && ! is.null(dim(x.data)) )
+	multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
+		( is(xt, "signalSeries") && ! is.null(dim(xt)) )
 	if ( multi.trace == TRUE ) {
-		x.len <- dim(x.data)[1]
+		x.len <- dim(xt)[1]
 	} else {
-		x.len <- length(x.data)
+		x.len <- length(xt)
 	}
 
 	# make the Heaviside function times 2. For fft(), note that at discontinuities, h(f) -> 0.5 * [h(f-) + h(f+)],

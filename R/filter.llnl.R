@@ -1,4 +1,4 @@
-#' Wrapper for LLNL (SAC) filter function
+#' Filter a Time Series
 #'
 #' @description
 #' \code{filter.llnl} filters a univariate time series.
@@ -12,8 +12,8 @@
 #' \item{low pass}{c("lp","lowpass","low-pass")}
 #' \item{high pass}{c("hp","highpass","high-pass")}
 #' }
-#' Characters are case-insensitive, and only enough need be supplied to uniquely
-#' define the string (e.g., "L" is sufficient to select low pass). Default is
+#' Characters are case-insensitive, and only need to uniquely
+#' define the option (e.g., "L" is sufficient to select low pass). Default is
 #' bandpass.
 #' @param filt.type \describe{
 #' \item{Butterworth}{c("bu","butterworth")}
@@ -21,15 +21,15 @@
 #' \item{Chebyshev Type I}{("c1","Chebyshev1","Chebyshev-Type-I")}
 #' \item{Chebyshev Type II}{("c2","Chebyshev2","Chebyshev-Type-II")}
 #' }
-#' Characters are case-insensitive, and only enough need be supplied to uniquely
-#' define the string (e.g., "BE" is sufficient to select Bessel). Default is
+#' Characters are case-insensitive, and only need to uniquely
+#' define the option (e.g., "BE" is sufficient to select Bessel). Default is
 #' Butterworth.
 #' @param f.lo Low-pass filter corner frequency, in Hz. Default is 2 / (len(xt) * dt).
 #' @param f.hi Hi-pass filter corner frequency, in Hz. Default is 1 / (3 * dt), which
 #' is 1/3 of the Nyquist frequency.
 #' @param dir Filter direction: c("forward", "reverse", "zp", "both", "zerophase").
-#' Case-insensitive, and only enough characters need be supplied to uniquely define
-#' the string (e.g., "F" is sufficient to select Forward). Default is zero-phase.
+#' Characters are case-insensitive, and only need to uniquely define
+#' the option (e.g., "F" is sufficient to select Forward). Default is zero-phase.
 #' @param cheb.sb.atten Chebyshev stop band attenuation (ignored for
 #' others), such that the maximum stop band amplitude is 1/atten. Default is 30.
 #' @param cheb.tr.bw Chebyshev transition bandwidth between stop and pass
@@ -42,13 +42,16 @@
 #' dt <- 0.01
 #' f.lo <- 20 / (length(dirac) * dt)
 #' f.hi <-  (2 / 5) * 1 / (2 * dt)
-#' impulse.response <- ts(filter.llnl(dirac, dt, order=8, pb.type="bp", filt.type="be",
-#'                        f.lo=f.lo, f.hi=f.hi, dir="zp"), start=0, deltat=dt)
-#' filt.spec <- spec.pgram(impulse.response,plot=FALSE)
+#' response <- filter.llnl(dirac, dt, order=8, pb.type="bp", filt.type="c2",
+#'                        f.lo=f.lo, f.hi=f.hi, dir="zp", cheb.sb.atten=100,
+#'                        cheb.tr.bw=0.4)
+#' response <- ts(response, start=0, deltat=dt)
+#' tsplot(response)
+#' filt.spec <- spec.pgram(response,plot=FALSE)
 #' ymax <- 1.2 * 10 ^ round(log10(max(filt.spec$spec)),digits=0)
-#' ymin <- 0.8 * 10 ^ (round(log10(max(filt.spec$spec)),digits=0) - 8)
+#' ymin <- 0.8 * 10 ^ (round(log10(max(filt.spec$spec)),digits=0) - 10)
 #' plot(filt.spec,ylab="Spectral Power",xlab="Frequency, Hz",ylim=c(ymin,ymax))
-#' @seealso \url{https://ds.iris.edu/files/sac-manual/commands/bandpass.html}
+#' @seealso \href{https://ds.iris.edu/files/sac-manual/commands/bandpass.html}{SAC Manual}
 #' @keywords ts
 #'
 filter.llnl <- function(xt, dt=0.01, order=NA, pb.type=NA, filt.type=NA,

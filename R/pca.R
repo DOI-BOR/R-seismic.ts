@@ -1,5 +1,24 @@
-pca <-
-function(x.data, y.data, z.data, dt=0.01, demean = TRUE, pct = NA)
+#' Polarization analysis using principal component analysis
+#'
+#' \code{pca} determines several polarization measures of an input 3-component
+#' time series using principal component analysis
+#'
+#' @param x.data Equally-sampled input series for the X-direction. Must convert to numeric vector.
+#' @param y.data Equally-sampled input series for the Y-direction. Must convert to numeric vector.
+#' @param z.data Equally-sampled input series for the Z-direction. Must convert to numeric vector.
+#' @param dt Sample interval, in seconds. Default is 0.01.
+#' @param demean Should windowed data be demeaned? Default is F.
+#' @param pct Percentage of data window to apply a \code{\link{hanning}} taper.
+#' Must be between 0 and 50. Default is 0 (no taper).
+#'
+#' @details Here's how it works...
+#' @return List with the polarization directions and measures.
+#' @seealso \code{\link{hanning}}, \code{\link{analytic.ts}},
+#' \code{\link{acf.xyz}}, \code{\link{eigen}}
+#'
+#' @keywords ts
+
+pca <- function(x.data, y.data, z.data, dt=0.01, demean = TRUE, pct = NA)
 {
 	# pca(ltoe.data$ltoe.l.disp[1850:2365],ltoe.data$ltoe.t.disp[1850:2365],ltoe.data$ltoe.z.disp[1850:2365],pct=20)
 	if ( ! is.na(pct) && (pct < 0 || pct > 50) )

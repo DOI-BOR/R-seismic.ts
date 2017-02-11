@@ -1,5 +1,24 @@
-# Note:  this function uses acf(), which automatically
-# de-means the series.
+#' Determine a prediction filter
+#'
+#' \code{predictionFilter} finds the optimal filter, in the least-squares sense,
+#' that transforms a specified univariate input time series into a lagged
+#' version of itself.
+#'
+#' @param x.data Equally-sampled input series. Must convert to numeric vector.
+#' @param length.filt Length of filter (default is 0.2 the input length)
+#' @param lag Lag used for determing the filter (default is 0)
+#'
+#' @details Uses \code{\link{acf}} to form the normal equations, which by default
+#' de-means the series, so if the desired output z has non-zero mean, the output
+#' filter will be for de-meaned z. The returned value of estimated z will add the
+#' mean back in. For long time series, we could just correct for the means, but
+#' this won't work for short wavelets since the time series are not assumed to
+#' repeat.
+#' @return List with the Wiener filter and various measures.
+#' @seealso \code{\link{acf}}, \code{\link{wienerFilter}}
+#'
+#' @keywords ts
+
 predictionFilter <- function(x.data, length.filt = NULL, lag = NULL) {
 	x <- as.vector( x.data )
 
