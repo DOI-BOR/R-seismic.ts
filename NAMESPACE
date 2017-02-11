@@ -1,4 +1,6 @@
 # keep this comment line to avoid roxygen issues
 useDynLib(seismic.ts, .registration = TRUE)
+# load libfftw in .onLoad instead of via useDynLib
+#useDynLib("libfftw3-3")
 importFrom("stats", "acf", "fft", "filter", "is.mts", "toeplitz", "ts")
 exportPattern("^[[:alpha:]]+")

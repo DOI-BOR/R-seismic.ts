@@ -5,8 +5,6 @@
 */
 
 #include "resp.h"
-#include "ts.h"
-#include "ts_proto.h"
 
 #ifdef DllImport
 #  undef DllImport
@@ -119,9 +117,9 @@ static double *getpsr(double *ts, int len, double dt, double *per, int nper,
 			rspect[ii] = lspeak(tau,lam,ts,len,dt,otype);
 		else if ( rm == RM_CONV )
 			rspect[ii] = cpeak(tau,lam,ts,len,dt,otype);
-#ifdef HAVE_FFT
+#ifdef HAVE_FFTW3
 		else if ( rm == RM_FFT )
-			rspect[ii] = fpeak(tau,lam,nlen,dt,otype);
+			rspect[ii] = fpeak(tau,lam,ts,len,dt,otype);
 #endif
 		else
 			oops("getpsr","unknown response method\n");
@@ -139,6 +137,7 @@ DllExport void resp(char in_type, char out_type,
 {
 	int ii, nn, win_len;
 	double tausi1, tausi2, t0, tw, *mts, **rspect;
+	BOOL fftflg = FALSE;
 
 	/* sanity checking */
 	if ( ts == NULL || len < 3 )
@@ -161,26 +160,9 @@ DllExport void resp(char in_type, char out_type,
 	mts = window_ts(ts,len,FALSE,dt,t0,tw,FALSE,ptap,TW_HANNING,FALSE,&win_len);	/* returns windowed time series; ts is unchanged */
 
 	nn = getpow(in_type,'a');
-#ifdef HAVE_FFT
-	/* get forward fft of time series */
-	if ( fftflg ) {
-		int tsign, repflg, nn;
-		float df, avg;
-
-		/* load complex buffer with time series */
-		ldbuf(mts,win_len);
-
-		/* take fft, and multiply by omega**n to get accel.  Should
-			also pad with zeros to avoid wraparound, but we'll
-			ignore that for now */
-		tsign = -1; repflg = 1;
-# ifdef LOG2FFT
-		spec2c_(buf,&win_len,wrk1,wrk2,&dt,&nlen,&avg,&tsign,&repflg);
-# else
-		specnc_(buf,&win_len,wrk1,wrk2,wrk3,&dt,&nlen,&avg,&tsign,&repflg);
-# endif
-		df = 1. / ( nlen * dt );
-		omn(buf,df,nlen,nn);
+#ifdef HAVE_FFTW3
+	if ( fftflg && nn < 0 ) {
+		fft_int(mts, dt, len, nn);
 	} else
 #endif
 	{

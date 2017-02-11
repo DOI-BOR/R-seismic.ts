@@ -2,14 +2,14 @@
 
 extern void oops ( char *, char * );
 extern void smsg ( char *, char * );
-extern double bzpeak ( double, double, double *, int, double, char );
-extern double lspeak ( double, double, double *, int, double, char );
-extern double rpeak ( double, double, double *, int, double, char );
-extern double cpeak ( double, double, double *, int, double, char );
-extern double fpeak ( double, double, int, double, char );
-extern int getpow ( char, char );
-#ifdef HAVE_FFT
-extern void omn ( CMPLX *, double, int, int );
+extern double bzpeak(double tau, double lambda, double *ts, int len, double dt, char type);
+extern double lspeak(double tau, double lambda, double *ts, int len, double dt, char type);
+extern double rpeak(double tau, double lambda, double *ts, int len, double dt, char type);
+extern double cpeak(double tau, double lambda, double *ts, int len, double dt, char type);
+extern int getpow(char inflg, char outflg);
+#ifdef HAVE_FFTW3
+extern double fpeak(double tau, double lambda, double *ts, int len, double dt, char type);
+extern void fft_int(double *ts, double dt, int len, int nn);
 #endif
 
 DllImport void resp(char in_type, char out_type,

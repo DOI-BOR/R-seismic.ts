@@ -44,7 +44,7 @@ int getpow(char inflg, char outflg)
 /* multiply relative displacement response by
 	appropriate power of f0 to get desired response.
 	If this is a zero-period call, assume we have
-	the max of the accleration */
+	the max of the acceleration */
 static double scale(double tau, double max_disp, char type) {
 	double max_val = max_disp;
 	double c = 2. * M_PI / tau;
@@ -342,54 +342,107 @@ double cpeak(double tau, double lambda, double *ts, int len, double dt, char typ
 }
 
 
-#ifdef HAVE_FFT
-/* OMN - multiply/divide complex series by (i*omega)^n */
-void omn(CMPLX *buf, double df, int len, int n)
-{
-	int ii, jj;
-	double amp, phase, om, cnst;
+#ifdef HAVE_FFTW3
+// return the modulus of a DCMPLX value
+static double modulus( DCMPLX *x ) {
+	return sqrt( x->r*x->r + x->i*x->i );
+}
 
-	if ( n == 0 )
+// return the phase of a DCMPLX value
+static double phase( DCMPLX *x ) {
+	return atan2( x->i, x->r );
+}
+
+// fftw3 wrapper
+static CMPLX* fft(DCMPLX *x, int N) {
+	int ii;
+	fftw_plan p = fftw_plan_dft_1d(N, (fftw_complex *)x, (fftw_complex *)x, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+	// convert in-place to CMPLX
+	for ( ii = 0 ; ii < N ; ii++ ) {
+		CMPLX ctmp;
+		ctmp.a = modulus(x + ii);
+		ctmp.p = phase(x + ii);
+		memcpy( x + ii, &ctmp, sizeof( *x ) );
+	}
+	return (CMPLX *)x;
+}
+
+// fftw3 wrapper
+static DCMPLX* ifft(CMPLX *x, int N) {
+	int ii;
+	// convert in-place to CMPLX, and scale by N for inverse transform
+	for ( ii = 0 ; ii < N ; ii++ ) {
+		DCMPLX dtmp;
+		dtmp.r = x[ii].a * cos( x[ii].p ) / N;
+		dtmp.i = x[ii].a * sin( x[ii].p ) / N;
+		memcpy( x + ii, &dtmp, sizeof( *x ) );
+	}
+	fftw_plan p = fftw_plan_dft_1d(N, (fftw_complex *)x, (fftw_complex *)x, FFTW_BACKWARD, FFTW_ESTIMATE);
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+
+	return (DCMPLX *)x;
+}
+
+/* fft_int - take the fft of a real time series, multiply/divide by (i*omega)^n,
+	and take the inverse fft */
+void fft_int(double *ts, double dt, int len, int nn)
+{
+	int ii;
+	double cnst, df;
+	DCMPLX *sbuf, *cts;
+	CMPLX* s;
+
+	if ( nn == 0 )
 		return;
 
-	/* multiply by (i * omega)^n */
+	df = 1 / (len * dt);
+
+	sbuf = calloc( len, sizeof( *sbuf ) );
+	for ( ii = 0 ; ii < len ; ii++ )
+		sbuf[ii].r = ts[ii];
+	s = fft( sbuf, len );
+
+	/* multiply spectrum by (i * omega)^nn */
 	cnst = 2. * M_PI * df;
 	for ( ii = 0 ; ii <= len/2 ; ii++ ) {
+		int jj;
+		double amp, phase, om;
 		om = cnst * ii;
-		if ( ii == 0 && n < 0 )
+		if ( ii == 0 && nn < 0 )
 			continue;
-		amp = ( n < 0 ? 1. / om : om);
-		phase = ( n < 0 ? -1. : 1. ) * M_PI / 2.;
-		for ( jj = 0 ; jj < ABS(n) ; jj++ ) {
+		amp = ( nn < 0 ? 1. / om : om);
+		phase = ( nn < 0 ? -1. : 1. ) * M_PI / 2.;
+		for ( jj = 0 ; jj < ABS(nn) ; jj++ ) {
 				/* positive frequencies */
-			buf[ii].a *= amp;
-			buf[ii].p += phase;
+			s[ii].a *= amp;
+			s[ii].p += phase;
 				/* negative frequencies */
 			if ( ii == 0 || (ii == len/2 && len % 2 == 0) )
 				continue;
-			buf[len-ii].a *= amp;
-			buf[len-ii].p -= phase;
+			s[len-ii].a *= amp;
+			s[len-ii].p -= phase;
 		}
 	}
 
-	/* make -pi <= phase <= +pi */
-	for ( ii = 0 ; ii < len ; ii++ ) {
-		while ( buf[ii].p > M_PI )
-			buf[ii].p -= 2. * M_PI;
-		while ( buf[ii].p < -1.0 * M_PI )
-			buf[ii].p += 2. * M_PI;
-	}
+	// take the inverse FFT, and replace input with real part
+	cts = ifft( s, len );
+	for ( ii = 0 ; ii < len ; ii++ )
+		ts[ii] = cts[ii].r;
+
 }
 
 /* multiply FFT output by
 	appropriate factor to get desired response.
 	If this is a zero-period call, assume we have
-	the max of the accleration */
-static double scalef(double tau, double max_disp, char *type) {
+	the max of the acceleration */
+static double scalef(double tau, double max_disp, double f0, char type) {
 	double max_val = max_disp;
 	double c = 2. * M_PI / tau;
 	c = 2. * M_PI * f0;
-	switch ( *type ) {
+	switch ( type ) {
 		case 'a': /* pseudo absolute acceleration */
 			break;
 		case 'v': /* pseudo relative velocity */
@@ -412,14 +465,20 @@ static double scalef(double tau, double max_disp, char *type) {
 
 /* FPEAK - get peak response for a particular natural frequency using
 	FFT method */
-double fpeak(double tau, double lambda, int len, double dt, char *type)
+double fpeak(double tau, double lambda, double *ts, int len, double dt, char type)
 {
-	int ii, imax, jj, tsign, repflg, nlen;
-	double df, dtt, freq, f0, f1, f2, avg;
-	double max, phase, c;
-	double amp;
+	int ii, imax;
+	double df, f0, max;
+	DCMPLX *sbuf, *cts;
+	CMPLX *s;
 
 	df = 1./ ( len * dt );
+
+	sbuf = calloc( len, sizeof( *sbuf ) );
+	for ( ii = 0 ; ii < len ; ii++ )
+		sbuf[ii].r = ts[ii];
+
+	s = fft(sbuf, len);	// in-place fft, so just a pointer to sbuf
 
 	/* multiply previously transformed acceleration time series
 		by oscillator response to get displacement spectrum */
@@ -427,6 +486,8 @@ double fpeak(double tau, double lambda, int len, double dt, char *type)
 	if ( tau > 0. ) {
 		f0 = 1. / tau;
 		for ( ii = 0 ; ii <= len/2 ; ii++) {
+			int jj;
+			double amp, phase, freq, f1, f2;
 			freq = ii * df;
 			f1 = freq / f0;
 			f2 = f1 * f1;
@@ -434,54 +495,33 @@ double fpeak(double tau, double lambda, int len, double dt, char *type)
 			amp += 4. * lambda * lambda * f2;
 			amp = 1. / sqrt(amp);
 			phase = atan2(2. * lambda * f1,f2 - 1.);
-				/* positive frequencies */
-			sbuf[ii].a = amp * buf[ii].a;
-			sbuf[ii].p = buf[ii].p + phase;
-				/* negative frequencies */
+			/* positive frequencies */
+			s[ii].a *= amp;
+			s[ii].p += phase;
+			/* negative frequencies */
 			if ( ii == 0 || ii == len/2 )
 				continue;
 			jj = len - ii;
-			sbuf[jj].a = amp * buf[jj].a;
-			sbuf[jj].p = buf[jj].p - phase;
-		}
-
-		/* make -pi < phase < pi */
-		for ( ii = 0 ; ii < len ; ++ii) {
-			while ( sbuf[ii].p > M_PI )
-				sbuf[ii].p -= 2. * M_PI;
-			while ( sbuf[ii].p < -1.0 * M_PI )
-				sbuf[ii].p += 2. * M_PI;
+			s[jj].a *= amp;
+			s[jj].p -= phase;
 		}
 	} else {
 		/* zero-period case */
 		f0 = -1.;
-		for ( ii = 0 ; ii < len ; ii++ ) {
-			sbuf[ii].a = buf[ii].a;
-			sbuf[ii].p = buf[ii].p;
-		}
 	}
 
 	/* inverse transform */
-	tsign = 1; repflg = 1; dtt = dt;
-#ifdef LOG2FFT
-	spec2c_(sbuf,&len,wrk1,wrk2,&dtt,&nlen,&avg,&tsign,&repflg);
-#else
-	specnc_(sbuf,&len,wrk1,wrk2,wrk3,&dtt,&nlen,&avg,&tsign,&repflg);
-#endif
-
-	/* len should have already been expanded to FFT len */
-	if ( len != nlen )
-		oops("fpeak","FFT len != len\n");
+	cts = ifft(s, len);	// in-place fft, so just another pointer to sbuf
 
 	/* find the peak absolute value of the time series, which is
 		real. Skip the first few points */
 	max = 0; imax = 0;
-	for ( ii = 6 ; ii < nlen ; ++ii)
-		chkmax(sbuf[ii].a,&max,ii,&imax);
-	if ( debug == 3 )
-		fprintf(stderr,"\tmax = %.3f, imax = %d\n",max,imax);
+	for ( ii = 6 ; ii < len ; ++ii)
+		chkmax(ABS(cts[ii].r),&max,ii,&imax);
+
+	free( sbuf );
 
 	/* now have relative displacement - scale and return */
-	return(scalef(tau, max, type));
+	return(scalef(tau, max, f0, type));
 }
-#endif /* HAVE_FFT */
+#endif /* HAVE_FFTW3 */

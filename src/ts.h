@@ -2,6 +2,12 @@
 
 #include "common.h"
 
+/* define complex types */
+typedef struct cmplx {
+	double a;	/* amplitude */
+	double p;	/* phase */
+} CMPLX;
+
 /* enum defining implemented orders for finite-difference derivatives */
 typedef enum { FD_ORDER_2 = 0, FD_ORDER_4, FD_ORDER_6, FD_ORDER_8 } FdOrder;
 /* enum defining implemented taper types */

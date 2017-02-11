@@ -26,6 +26,7 @@
 #'  \item bilinear Z transform
 #'  \item original method of Niagam and Jennings (1969)
 #'  \item circular convolution (slow)
+#'  \item FFT method
 #' }
 #' Note that these methods may give very different results for periods < ~5 * dt.
 #' @param tau.si.range Period range to compute spectrum intensity. Default
