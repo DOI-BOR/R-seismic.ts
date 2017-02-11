@@ -1,3 +1,5 @@
-signalSeries2ts <- function(ss) {
-	ts(ss@data,deltat=ss@positions@by,start=ss@positions@from)
+setAs("signalSeries", "ts",
+function(from) {
+	ts(from@data, deltat=from@positions@by, start=from@positions@from)
 }
+)
