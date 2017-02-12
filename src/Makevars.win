@@ -14,7 +14,8 @@ PKG_CPPFLAGS=-DHAVE_FFTW3 -I$(LIB_FFTW_DIR)
 PKG_LIBS=-L$(LIB_FFTW_DIR) -l$(LIB_FFTW)
 #PKG_LIBS=-l$(LIB_FFTW)
 
-all: fftw $(SHLIB)
+#all: fftw $(SHLIB)
+all: $(SHLIB)
 
 fftw:
 	@cp $(LIB_FFTW_DLL) .
