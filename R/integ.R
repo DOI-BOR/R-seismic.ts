@@ -4,7 +4,8 @@
 #'
 #' @param x.data Equally-sampled input series. Must convert to a numeric
 #' \code{\link{vector}}, \code{\link{signalSeries}}, or \code{\link{ts}}.
-#' @param dt Sample interval. Default is 0.01 seconds.
+#' @param dt Sample interval. Default is 0.01 seconds if input is not a
+#' \code{\link{ts}} or \code{\link{signalSeries}}.
 #'
 #' @details These are generic functions. Integration is performed by \code{\link{cumsum}}.
 #' @return List containing the cumulative sum, and the integrated time series.
@@ -12,8 +13,11 @@
 #' @keywords ts
 #'
 
-integ.default <- function(x.data, dt=0.01) {
-	multi.trace <- is.matrix(x.data) || length(dim(x.data)) > 1
+integ.default <- function(x.data, dt=NA) {
+  if ( is.na(dt) )
+    dt <- 0.01
+
+  multi.trace <- is.matrix(x.data) || length(dim(x.data)) > 1
 
 	ss <- NULL
 	if ( multi.trace ) {
@@ -44,8 +48,9 @@ setGeneric("integ",def=integ.default)
 integ.ts <- function(x.data, dt=NA) {
 	multi.trace <- is.mts(x.data)
 
+	dt <- deltat(x.data)
 	if ( is.na(dt) )
-		dt <- deltat(x.data)
+	  dt <- 0.01
 	start <- start(x.data)[1]
 	ss <- NULL
 	if ( multi.trace == TRUE ) {
@@ -56,18 +61,18 @@ integ.ts <- function(x.data, dt=NA) {
 			Ix <- cumsum(x.data[ok,cn]) * dt
 			ss <- c(ss, Ix[length(Ix)])
 			if ( is.null(xi.data) )
-				xi.data <- ts(Ix, start = start, deltat = dt)
+				xi.data <- ts(Ix, deltat = dt)
 			else
-				xi.data <- ts(xi.data, Ix, start = start, deltat = dt)
+				xi.data <- ts(data.frame(xi.data, Ix), deltat = dt)
 		}
 	} else {
 		x.len <- length(x.data)
 		ok <- ! is.na(x.data)
 		Ix <- cumsum(x.data[ok]) * dt
 		ss <- c(ss, Ix[length(Ix)])
-		xi.data <- Ix
+		xi.data <- ts(Ix, deltat = dt)
 	}
-	names(xi.data) <- names(x.data)
+	dimnames(xi.data) <- dimnames(x.data)
 	list(sum=ss,Ix.data=xi.data)
 }
 setMethod("integ","ts",integ.ts)
@@ -76,19 +81,24 @@ setMethod("integ","ts",integ.ts)
 integ.signalSeries <- function(x.data, dt=NA) {
 	multi.trace <- ! is.null(dim(x.data))
 
+	dt <- deltat(x.data)
 	if ( is.na(dt) )
-		dt <- deltat(x.data)
+	  dt <- 0.01
 	start <- x.data@positions@from
 
 	units <- x.data@units
-	if ( grep("cm/s",units) )
-		new.units <- "cm"
-	else if ( grep("cm/s/s",units) )
+	if ( grep("cm/s/s",units) || grep("cm/s^2",units) )
 		new.units <- "cm/s"
-	else if ( grep("ft/s",units) )
-		new.units <- "ft"
+	else if ( grep("cm/s",units) )
+		new.units <- "cm"
+	else if ( grep("m/s/s",units) || rep("m/s^2",units) )
+	  new.units <- "m/s"
+	else if ( grep("m/s",units) )
+	  new.units <- "m"
 	else if ( grep("ft/s/s",units) )
 		new.units <- "ft/s"
+	else if ( grep("ft/s",units) )
+		new.units <- "ft"
 	else
 		new.units <- NULL
 
@@ -104,7 +114,7 @@ integ.signalSeries <- function(x.data, dt=NA) {
 			if ( is.null(xi.data) )
 				xi.data <- signalSeries(Ix, from = start, by = dt, units = new.units)
 			else
-				xi.data <- signalSeries(xi.data, Ix, from = start, by = dt, units = new.units)
+				xi.data <- signalSeries(data.frame(xi.data@data, Ix@data), from = start, by = dt, units = new.units)
 		}
 	} else {
 		x.len <- length(x.data)

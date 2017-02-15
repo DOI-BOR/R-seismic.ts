@@ -1,12 +1,15 @@
-#' Filter a Univariate Time Series
+#' Filter a Multivariate Time Series
 #'
 #' @description
-#' \code{filter.llnl} filters a univariate time series using the digital
-#' equivalents of common analog filter types. It is derived from the
+#' \code{filter.llnl} filters a univariate or multivariate time series using
+#' the digital  equivalents of common analog filter types. It is derived from the
 #' Seismic Analysis Code (SAC) package from Lawrence Livermore National Labs.
 #'
-#' @param xt Equally-sampled input series. Must convert to numeric vector.
-#' @param dt Sample interval, in seconds. Default is 0.01.
+#' @param xt Equally-sampled input series, including a numeric \code{\link{vector}},
+#' \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}},
+#' or \code{\link{signalSeries}}.
+#' @param dt Sample interval, in seconds. Default is 0.01 if input is not a
+#' \code{\link{ts}} or \code{\link{signalSeries}}.
 #' @param order Order of filter, between 1 and 8. Default is 4.
 #' @param pb.type \describe{
 #' \item{band pass}{\code{c("bp","bandpass","band-pass")}}
@@ -41,15 +44,14 @@
 #' based on a conversion of the original Fortran code to C at the University
 #' of Washington.
 #' @examples
-#' dirac <- c(rep(0,1000),1,rep(0,1000))
 #' dt <- 0.01
+#' dirac <- ts(c(rep(0,1000),1,rep(0,1000)), start=0, deltat=dt)
 #' f.lo <- 20 / (length(dirac) * dt)
 #' f.hi <-  (2 / 5) * 1 / (2 * dt)
-#' response <- filter.llnl(dirac, dt, order=8, pb.type="bp", filt.type="c2",
+#' response <- filter.llnl(dirac, order=8, pb.type="bp", filt.type="c2",
 #'                        f.lo=f.lo, f.hi=f.hi, dir="zp", cheb.sb.atten=100,
 #'                        cheb.tr.bw=0.4)
-#' response <- ts(response, start=0, deltat=dt)
-#' tsplot(response)
+#' tsplot(response) # response is a ts object because input was
 #' filt.spec <- spec.pgram(response,plot=FALSE)
 #' ymax <- 1.2 * 10 ^ round(log10(max(filt.spec$spec)),digits=0)
 #' ymin <- 0.8 * 10 ^ (round(log10(max(filt.spec$spec)),digits=0) - 10)
@@ -57,26 +59,155 @@
 #' @seealso \href{https://ds.iris.edu/files/sac-manual/commands/bandpass.html}{SAC Manual}
 #' @keywords ts
 #'
-filter.llnl <- function(xt, dt=0.01, order=NA, pb.type=NA, filt.type=NA,
-												f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
 
-	xt <- as.double(xt[!is.na(xt)])
-	len <- length(xt)
-	if ( len < 3 )
-		stop("input time series must have at least 3 valid points")
+#' @describeIn filter.llnl.default filters a numeric \code{vector} or \code{matrix}.
+filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
+												f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
 
 	# do basic sanity checking, and silently fix obviously bad values
 	if ( ! is.na(order) )
 		order <- max(min(order,8),1)
 	if ( ! is.na(f.lo) && f.lo <= 0 )
 		f.lo <- NA
+	if ( is.na(dt) )
+	  dt <- 0.01
 	if ( ! is.na(f.hi) && f.hi >= 2 / dt )
 		f.hi <- NA
 
-	# call C function
-	out <- .Call("CALLfilter_ts",
-							 as.double(xt), as.double(dt), as.integer(order), as.character(pb.type),
-							 as.character(filt.type), as.double(f.lo), as.double(f.hi),
-							 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
-	return(out)
+	multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
+	if ( multi.trace ) {
+	  xt.len <- dim(xt)[1]
+	  if ( xt.len < 3 )
+	    stop("input time series must have at least 3 valid points")
+	  ft.mts = NULL
+	  for ( ii in 1:dim(xt)[2] ) {
+	    ok <- ! is.na(xt[,ii])
+	    ft <- .Call("CALLfilter_ts",
+	                 as.double(xt[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
+	                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
+	                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+	    if ( is.null(dxdt.mts) )
+	      ft.mts <- data.frame(ft)
+	    else
+	      ft.mts <- data.frame(ft.mts,ft)
+	  }
+	  ft <- ft.mts
+	} else {
+	  xt <- as.double(xt[!is.na(xt)])
+	  xt.len <- length(xt)
+	  if ( xt.len < 3 )
+	    stop("input time series must have at least 3 valid points")
+	  ft <- .Call("CALLfilter_ts",
+	              xt, as.double(dt), as.integer(order), as.character(pb.type),
+	              as.character(filt.type), as.double(f.lo), as.double(f.hi),
+	              as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+	}
+
+	return(ft)
 }
+setGeneric("filter.llnl",def=filter.llnl.default)
+
+#' @describeIn filter.llnl.default filters a \code{ts} or \code{mts} object.
+filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
+                           f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
+  # do basic sanity checking, and silently fix obviously bad values
+  if ( ! is.na(order) )
+    order <- max(min(order,8),1)
+  if ( ! is.na(f.lo) && f.lo <= 0 )
+    f.lo <- NA
+  if ( is.na(dt) )
+    dt <- deltat(xt)
+  if ( ! is.na(f.hi) && f.hi >= 2 / dt )
+    f.hi <- NA
+
+  multi.trace <- is.mts(xt)
+
+  start <- start(xt)[1]
+
+  if ( multi.trace == TRUE ) {
+    xt.len <- dim(xt)[1]
+    if ( xt.len < 3 )
+      stop("input time series must have at least 3 valid points")
+    ft.mts = NULL
+    for ( ii in 1:dim(xt)[2] ) {
+      ok <- ! is.na(xt[,ii])
+      ft <- .Call("CALLfilter_ts",
+                  as.double(xt[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
+                  as.character(filt.type), as.double(f.lo), as.double(f.hi),
+                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+      if ( is.null(ft.mts) )
+        ft.mts <- ts(ft, start = start, deltat = dt)
+      else
+        ft.mts <- ts(data.frame(ft.mts, ft), start = start, deltat = dt)
+    }
+    ft <- ft.mts
+  } else {
+    xt <- as.double(xt[!is.na(xt)])
+    xt.len <- length(xt)
+    if ( xt.len < 3 )
+      stop("input time series must have at least 3 valid points")
+    ft <- .Call("CALLfilter_ts",
+                xt, as.double(dt), as.integer(order), as.character(pb.type),
+                as.character(filt.type), as.double(f.lo), as.double(f.hi),
+                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+    ft <- ts(ft, start = start, deltat = dt)
+  }
+  dimnames(ft) <- dimnames(xt)
+
+  return(ft)
+}
+setMethod("filter.llnl","ts",filter.llnl.ts)
+
+#' @describeIn filter.llnl.default filters a \code{signalSeries} object.
+filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
+                                     f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
+  # do basic sanity checking, and silently fix obviously bad values
+  if ( ! is.na(order) )
+    order <- max(min(order,8),1)
+  if ( ! is.na(f.lo) && f.lo <= 0 )
+    f.lo <- NA
+  if ( is.na(dt) )
+    dt <- deltat(xt)
+  if ( ! is.na(f.hi) && f.hi >= 2 / dt )
+    f.hi <- NA
+
+  multi.trace <- ! is.null(dim(xt))
+
+  start <- xt@positions@from
+
+  units <- xt@units
+
+  if ( multi.trace == TRUE ) {
+    if ( xt.len < 3 )
+      stop("input time series must have at least 3 valid points")
+    ft.mts = NULL
+    for ( ii in 1:dim(xt)[2] ) {
+      ok <- ! is.na(xt[,ii]@data)
+      ft <- .Call("CALLfilter_ts",
+                  as.double(xt[ok,ii]@data), as.double(dt), as.integer(order), as.character(pb.type),
+                  as.character(filt.type), as.double(f.lo), as.double(f.hi),
+                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+      if ( is.null(xt) )
+        dxdt.mts <- signalSeries(dxdt, from = start, by = dt, units = new.units)
+      else
+        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from = start, by = dt, units = new.units)
+    }
+    ft <- ft.mts
+  } else {
+    ok <- ! is.na(xt@data)
+    xt.len <- length(xt[ok])
+    if ( xt.len < 3 )
+      stop("input time series must have at least 3 valid points")
+    ft <- .Call("CALLfilter_ts",
+                xt, as.double(dt@data), as.integer(order), as.character(pb.type),
+                as.character(filt.type), as.double(f.lo), as.double(f.hi),
+                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+    ft <- signalSeries(ft, from = start, by = dt, units = new.units)
+  }
+  names(ft) <- names(xt)
+
+  return(ft)
+}
+setMethod("filter.llnl","signalSeries",filter.llnl.signalSeries)
+
+

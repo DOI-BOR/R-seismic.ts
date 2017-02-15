@@ -1,13 +1,16 @@
-#' Polarization analysis using principal component analysis
+#' Polarization analysis using principal components
 #'
 #' \code{pca} determines several polarization measures of an input 3-component
 #' time series using principal component analysis
 #'
-#' @param x.data Equally-sampled input series for the X-direction. Must convert to numeric vector.
-#' @param y.data Equally-sampled input series for the Y-direction. Must convert to numeric vector.
-#' @param z.data Equally-sampled input series for the Z-direction. Must convert to numeric vector.
-#' @param dt Sample interval, in seconds. Default is 0.01.
-#' @param demean Should windowed data be demeaned? Default is F.
+#' @param xt,yt,zt Equally-sampled univariate input series for the the X, Y,
+#' and Z directions. Alternatively, \code{xt} can be a multivariate time series
+#' with X, Y, and Z data in the first 3 positions (and in that order). Must
+#' convert to numeric \code{\link{vector}}, \code{\link{matrix}},
+#' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
+#' @param dt Sample interval, in seconds. Default is 0.01, or \code{deltat}
+#' if \code{xt} is a \code{\link{ts}} or \code{\link{signalSeries}} object.
+#' @param demean TRUE if the windowed data should be demeaned? Default is FALSE.
 #' @param pct Percentage of data window to apply a \code{\link{hanning}} taper.
 #' Must be between 0 and 50. Default is 0 (no taper).
 #'
@@ -18,22 +21,47 @@
 #'
 #' @keywords ts
 
-pca <- function(x.data, y.data, z.data, dt=0.01, demean = TRUE, pct = NA)
+pca <- function(xt, yt=NULL, zt=NULL, dt=NULL, demean=TRUE, pct=NA)
 {
 	# pca(ltoe.data$ltoe.l.disp[1850:2365],ltoe.data$ltoe.t.disp[1850:2365],ltoe.data$ltoe.z.disp[1850:2365],pct=20)
 	if ( ! is.na(pct) && (pct < 0 || pct > 50) )
 		stop(sprintf("pct (%.2f) must be between 0 and 50",pct))
 
-	# treat input as vector, and trim to minimum length
-	x <- as.vector(x.data)
-	y <- as.vector(y.data)
-	z <- as.vector(z.data)
-	len <- min(length(x), length(y), length(z))
-	x <- x[1:len]
-	y <- y[1:len]
-	z <- z[1:len]
+  multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
+    ( is(xt, "signalSeries") && ! is.null(dim(xt)) )
 
-	# bind the input series into a multivariate time series
+  if ( multi.trace == TRUE ) {
+    if ( dim(xt)[2] < 3 )
+      stop("multivariate time series must have at least 3 components (x, Y, and z)")
+    len <- dim(xt)[1]
+    if ( is(xt, "signalSeries") ) {
+      x <- xt[,1]@data
+      y <- yt[,2]@data
+      z <- zt[,3]@data
+    } else {
+      if ( is.na(yt) || is.na(zt) )
+        stop("Missing yt and/or zt inputs")
+      x <- xt[,1]
+      y <- yt[,2]
+      z <- zt[,3]
+    }
+    if ( is(xt, "signalSeries") || is(xt, "ts") )
+      dt <- deltat(xt)
+  } else {
+  	x <- as.vector(x.data)
+  	y <- as.vector(y.data)
+  	z <- as.vector(z.data)
+    # trim vectors to minimum length
+  	len <- min(length(x), length(y), length(z))
+  	x <- x[1:len]
+  	y <- y[1:len]
+  	z <- z[1:len]
+  }
+
+  if ( is.na(dt) )
+    dt <- 0.01
+
+	# bind data into an mts
 	xyz <- ts(cbind(x,y,z), deltat=dt)
 
 	# taper, if requested
