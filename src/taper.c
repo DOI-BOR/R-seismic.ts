@@ -27,13 +27,15 @@
 		norm_wt - normalization weight to apply to the un-tapered points, if norm = TRUE
 	Returns a pointer to double with the taper - caller must free
 */
-static double *mk_taper(int *thlen, int len, TaperType type, double ptap, BOOL do_norm, double *norm_wt)
+static double *mk_taper(int *thlen, int len, TaperType type, double ptap,
+                        BOOL do_norm, double *norm_wt)
 {
 	double ww, *wt;
 	double a0, a1, a2, a3, sum_wt2;
 	int ii, thl;
 
 	if ( thlen == NULL || (do_norm == TRUE && norm_wt == NULL) )
+	  oops("mk_taper","Argument exception: thlen or norm_wt are NULL");
 
 	/* taper 1/2-length in samples */
 	thl = MIN(ROUND(len * ptap / 100), len / 2);
@@ -57,7 +59,7 @@ static double *mk_taper(int *thlen, int len, TaperType type, double ptap, BOOL d
 		case TW_PARZEN: /* parzen taper */
 			for ( ii = 0 ; ii < thl ; ii++ ) {
 				ww = (double)ii / (thl + 1.);
-				if ( ww - 0.5 <= 0 ) 
+				if ( ww - 0.5 <= 0 )
 					ww = 6. * ww * ww * ( 1. - ww );
 				else
 					ww = 1. - 2. * pow( 1. - ww , 3.);
@@ -154,7 +156,7 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 			oops("window_ts","can't get space for time series");
 		memcpy(xc, (CMPLX *)buf + start, winlen * sizeof(*xc));
 	} else {
-		if ( (xr = calloc(winlen, sizeof(double))) == NULL )
+		if ( (xr = calloc(winlen, sizeof(*xr))) == NULL )
 			oops("window_ts","can't get space for time series");
 		memcpy(xr, (double *)buf + start, winlen * sizeof(*xr));
 	}
@@ -191,13 +193,12 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 
 		/* apply taper to window */
 		for ( ii = 0 ; ii < whlen ; ii++ ) {
-			jj = start + ii;
-			kk = start + winlen - 1 - ii;
+			kk = winlen - 1 - ii;
 			if ( is_cmplx ) {
-				xc[jj].a *= wt[ii];
+				xc[ii].a *= wt[ii];
 				xc[kk].a *= wt[ii];
 			} else {
-				xr[jj] *= wt[ii];
+				xr[ii] *= wt[ii];
 				xr[kk] *= wt[ii];
 			}
 		}

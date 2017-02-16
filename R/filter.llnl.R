@@ -39,7 +39,7 @@
 #' others), such that the maximum stop band amplitude is 1/atten. Default is 30.
 #' @param cheb.tr.bw Chebyshev transition bandwidth between stop and pass
 #' bands(ignored for others), as a fraction of the passband width. Default is 0.3.
-#' @return The filtered time series.
+#' @return The filtered time series, with the same object type as the input.
 #' @details Wraps a modified version of the SAC filter code, which in turn was
 #' based on a conversion of the original Fortran code to C at the University
 #' of Washington.
@@ -63,18 +63,18 @@
 #' @describeIn filter.llnl.default filters a numeric \code{vector} or \code{matrix}.
 filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
 												f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
+	multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
+	if ( is.na(dt) )
+	  dt <- 0.01
 
 	# do basic sanity checking, and silently fix obviously bad values
 	if ( ! is.na(order) )
 		order <- max(min(order,8),1)
 	if ( ! is.na(f.lo) && f.lo <= 0 )
 		f.lo <- NA
-	if ( is.na(dt) )
-	  dt <- 0.01
 	if ( ! is.na(f.hi) && f.hi >= 2 / dt )
 		f.hi <- NA
 
-	multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
 	if ( multi.trace ) {
 	  xt.len <- dim(xt)[1]
 	  if ( xt.len < 3 )
@@ -110,19 +110,19 @@ setGeneric("filter.llnl",def=filter.llnl.default)
 #' @describeIn filter.llnl.default filters a \code{ts} or \code{mts} object.
 filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                            f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
+  multi.trace <- is.mts(xt)
+  dt <- deltat(xt)
+  if ( is.na(dt) )
+    dt <- 0.01
+  start <- start(xt)[1]
+
   # do basic sanity checking, and silently fix obviously bad values
   if ( ! is.na(order) )
     order <- max(min(order,8),1)
   if ( ! is.na(f.lo) && f.lo <= 0 )
     f.lo <- NA
-  if ( is.na(dt) )
-    dt <- deltat(xt)
   if ( ! is.na(f.hi) && f.hi >= 2 / dt )
     f.hi <- NA
-
-  multi.trace <- is.mts(xt)
-
-  start <- start(xt)[1]
 
   if ( multi.trace == TRUE ) {
     xt.len <- dim(xt)[1]
@@ -161,23 +161,22 @@ setMethod("filter.llnl","ts",filter.llnl.ts)
 #' @describeIn filter.llnl.default filters a \code{signalSeries} object.
 filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                                      f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
+  multi.trace <- ! is.null(dim(xt))
+  if ( is.na(dt) )
+    dt <- deltat(xt)
+  start <- xt@positions@from
+  units <- xt@units
+
   # do basic sanity checking, and silently fix obviously bad values
   if ( ! is.na(order) )
     order <- max(min(order,8),1)
   if ( ! is.na(f.lo) && f.lo <= 0 )
     f.lo <- NA
-  if ( is.na(dt) )
-    dt <- deltat(xt)
   if ( ! is.na(f.hi) && f.hi >= 2 / dt )
     f.hi <- NA
 
-  multi.trace <- ! is.null(dim(xt))
-
-  start <- xt@positions@from
-
-  units <- xt@units
-
   if ( multi.trace == TRUE ) {
+    xt.len <- dim(xt)[1]
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     ft.mts = NULL
@@ -190,7 +189,7 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
       if ( is.null(xt) )
         dxdt.mts <- signalSeries(dxdt, from = start, by = dt, units = new.units)
       else
-        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from = start, by = dt, units = new.units)
+        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from = start, by = dt, units = units)
     }
     ft <- ft.mts
   } else {
@@ -199,10 +198,10 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     ft <- .Call("CALLfilter_ts",
-                xt, as.double(dt@data), as.integer(order), as.character(pb.type),
+                as.double(xt[ok]@data), as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
-    ft <- signalSeries(ft, from = start, by = dt, units = new.units)
+    ft <- signalSeries(ft, from = start, by = dt, units = units)
   }
   names(ft) <- names(xt)
 

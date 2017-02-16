@@ -1,4 +1,4 @@
-#' Apply a generalized Hann (Tukey) window
+#' Apply a Weneralized Hann (Tukey) Window to a Time Series
 #'
 #' @description
 #' \code{hanning} takes an input time series and multiplies it with a
@@ -21,18 +21,28 @@ hanning <- function(x.data, pct = NA, demean = FALSE) {
 	multi.trace <- is.mts(x.data) || is.matrix(x.data) || length(dim(x.data)) > 1 ||
 			( is(x.data, "signalSeries") && ! is.null(dim(x.data)) )
 
-	if ( multi.trace == TRUE )
-		x.len <- dim(x.data)[1]
-	else
+	if ( multi.trace == TRUE ) {
+    if ( is(x.data, "signalSeries") )
+      xt.len <- dim(x.data)[1]
+    else
+      x.len <- dim(x.data)[1]
+	} else
 		x.len <- length(x.data)
 
 	if ( demean && is.numeric(x.data) ) {
 		if ( multi.trace == TRUE ) {
 			for ( cn in 1:dim(x.data)[2] ) {
-				x.data[,cn] <- x.data[,cn] - mean(x.data[,cn])
+			  if ( is(x.data, "signalSeries") )
+			    x.data[,cn]@data <- x.data[,cn]@data - mean(x.data[,cn]@data)
+			  else
+			    x.data[,cn] <- x.data[,cn] - mean(x.data[,cn])
 			}
-		} else
-			x.data <- x.data - mean(x.data)
+		} else {
+		  if ( is(x.data, "signalSeries") )
+		    x.data@data <- x.data@data - mean(x.data)
+		  else
+		    x.data <- x.data - mean(x.data)
+		}
 	}
 
 	if ( is.na(pct) || pct == 50. ) {
@@ -55,11 +65,9 @@ hanning <- function(x.data, pct = NA, demean = FALSE) {
 		)
 	}
 
-	if ( is(x.data, "signalSeries") ) {
-		x.tmp <- x.data
-		x.tmp@data <- taper * x.tmp@data
-		x.taper <- x.tmp
-	} else
+	if ( is(x.data, "signalSeries") )
+		x.data@data <- taper * x.data@data
+	else
 		x.taper <- taper * x.data
 
 	return(x.taper)

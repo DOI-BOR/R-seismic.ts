@@ -21,7 +21,7 @@
 #'
 #' @keywords ts
 
-pca <- function(xt, yt=NULL, zt=NULL, dt=NULL, demean=TRUE, pct=NA)
+pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 {
 	# pca(ltoe.data$ltoe.l.disp[1850:2365],ltoe.data$ltoe.t.disp[1850:2365],ltoe.data$ltoe.z.disp[1850:2365],pct=20)
 	if ( ! is.na(pct) && (pct < 0 || pct > 50) )
@@ -30,27 +30,27 @@ pca <- function(xt, yt=NULL, zt=NULL, dt=NULL, demean=TRUE, pct=NA)
   multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
     ( is(xt, "signalSeries") && ! is.null(dim(xt)) )
 
-  if ( multi.trace == TRUE ) {
+  if ( multi.trace ) {
     if ( dim(xt)[2] < 3 )
       stop("multivariate time series must have at least 3 components (x, Y, and z)")
     len <- dim(xt)[1]
     if ( is(xt, "signalSeries") ) {
       x <- xt[,1]@data
-      y <- yt[,2]@data
-      z <- zt[,3]@data
+      y <- xt[,2]@data
+      z <- xt[,3]@data
     } else {
-      if ( is.na(yt) || is.na(zt) )
-        stop("Missing yt and/or zt inputs")
       x <- xt[,1]
-      y <- yt[,2]
-      z <- zt[,3]
+      y <- xt[,2]
+      z <- xt[,3]
     }
     if ( is(xt, "signalSeries") || is(xt, "ts") )
       dt <- deltat(xt)
   } else {
-  	x <- as.vector(x.data)
-  	y <- as.vector(y.data)
-  	z <- as.vector(z.data)
+    if ( is.na(yt) || is.na(zt) )
+      stop("Missing yt and/or zt inputs")
+    x <- as.vector(xt)
+  	y <- as.vector(yt)
+  	z <- as.vector(zt)
     # trim vectors to minimum length
   	len <- min(length(x), length(y), length(z))
   	x <- x[1:len]

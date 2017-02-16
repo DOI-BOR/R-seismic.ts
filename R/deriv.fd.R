@@ -13,7 +13,8 @@
 #' orders of 2, 4, 6, and 8 are supported. Default is 8.
 #' @param pct Percentage of data window to apply a Hanning taper. Must be
 #' between 0 and 50. Default is 0.
-#' @return the derivative of the windowed data
+#' @return the derivative of the windowed data, with the same object type as
+#' the input.
 #' @keywords ts
 #'
 
@@ -59,8 +60,7 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
   multi.trace <- is.mts(xt)
-
-  dt <- deltat(x.data)
+  dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
   start <- start(xt)[1]
@@ -103,34 +103,37 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
 
   multi.trace <- ! is.null(dim(xt))
 
-  dt <- deltat(x.data)
+  dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
   start <- xt@positions@from
 
   units <- xt@units
-  if ( grep("cm/s/s",units) || grep("cm/s^2",units) )
-    new.units <- "cm/s^3"
-  else if ( grep("m/s/s",units) || grep("m/s^2",units) )
-    new.units <- "m/s^3"
-  else if ( grep("cm/s",units) )
-    new.units <- "cm/s^2"
-  else if ( grep("m/s",units) )
-    new.units <- "m/s^2"
-  else if ( grep("cm",units) )
-    new.units <- "cm/s"
-  else if ( grep("m",units) )
-    new.units <- "m/s"
-  else if ( grep("ft/s/s",units) || grep("ft/s^2",units) )
-    new.units <- "ft/s^2"
-  else if ( grep("ft/s",units) )
-    new.units <- "ft/s^2"
-  else if ( grep("ft",units) )
-    new.units <- "ft/s"
-  else
-    new.units <- NULL
+  if ( is.na(units) || is.null(units) ) {
+    units.new <- NA
+  } else {
+    units.parts <- unlist(strsplit(
+      sub("^([[:alpha:]]+)(/+.+)","\\1 \\2", as.character(units)),
+      " ", fixed=TRUE))
+    if ( length(units.parts) > 1 ) {
+      secs <- unlist(strsplit(
+        sub("(.+)(\\^[0-9])*","\\1 \\2", units.parts[2]),
+        " ", fixed=TRUE))
+      if ( grep("^\\^",secs[2]) )
+        ex <- sub("\\^([0-9])*","\\1", secs[2])
+      else
+        ex <- nchar(secs) / 2
+    } else {
+      ex <- 0
+    }
+    if ( ex + nd > 1 )
+      units.new <- sprintf("%s/s^%d", units.parts[1], ex + nd)
+    else
+      units.new = sprintf("%s/s", units.parts[1])
+  }
 
   if ( multi.trace == TRUE ) {
+    xt.len <- dim(xt)[1]
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     dxdt.mts = NULL
@@ -140,9 +143,9 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
                     as.double(xt[ok,ii]@data), as.double(dt), as.integer(nd),
                     as.integer(order), as.double(pct))
       if ( is.null(xt) )
-        dxdt.mts <- signalSeries(dxdt, from = start, by = dt, units = new.units)
+        dxdt.mts <- signalSeries(dxdt, from=start, by=dt, units=units.new)
       else
-        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from = start, by = dt, units = new.units)
+        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from=start, by=dt, units=units.new)
     }
     dxdt <- dxdt.mts
   } else {
@@ -153,7 +156,7 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
     dxdt <- .Call("CALLfd_deriv",
                   as.double(xt[ok]@data), as.double(dt), as.integer(nd),
                   as.integer(order), as.double(pct))
-    dxdt <- signalSeries(dxdt, from = start, by = dt, units = new.units)
+    dxdt <- signalSeries(dxdt, from=start, by=dt, units=units.new)
   }
   names(dxdt) <- names(xt)
 

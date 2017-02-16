@@ -39,7 +39,9 @@ DllExport SEXP CALLfd_deriv(SEXP ts_d, SEXP dt_d, SEXP nd_i, SEXP order_i)
 	return dts_d;
 }
 
-DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d, SEXP demean_i, SEXP ptap_d, SEXP type_s, SEXP do_norm_i)
+DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d,
+                             SEXP demean_i, SEXP ptap_d, SEXP type_s,
+                             SEXP do_norm_i)
 {
 	int ii, pcnt = 0, win_len;
 	double *wts = NULL, *wtp;
