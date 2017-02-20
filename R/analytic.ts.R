@@ -1,11 +1,12 @@
 #' Compute the Analytic Signal
 #'
 #' @description
-#' \code{analytic.ts} computes the analytic signal of a real,
+#' \code{analytic.ts} computes the analytic signal for a real,
 #' univariate or multivariate time series.
 #'
-#' @param xt Equally-sampled input time series. Must convert to a
-#' numeric vector or matrix.
+#' @param x.data Equally-sampled univariate or multivariate series. Supported
+#' types include a numeric \code{\link{vector}}, \code{\link{matrix}},
+#' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
 #' @details The analytic signal s(t) of a function f(t) is defined
 #' by s(t) = f(t) - i * Hilbert(f(t)), where H(f(t)) is the Hilbert
 #' transform of f(t). This code uses the Fourier transform to compute
@@ -16,14 +17,17 @@
 #' @keywords ts
 #'
 analytic.ts <- function(xt) {
-	# check for multi-trace input
-	multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
-		( is(xt, "signalSeries") && ! is.null(dim(xt)) )
-	if ( multi.trace == TRUE ) {
-		x.len <- dim(xt)[1]
-	} else {
-		x.len <- length(xt)
-	}
+  # check for multi-trace input
+  multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
+    ( is(xt, "signalSeries") && ! is.null(dim(xt)) )
+
+  if ( multi.trace == TRUE ) {
+    if ( is(xt, "signalSeries") )
+      x.len <- dim(xt)[1]
+    else
+      x.len <- dim(xt)[1]
+  } else
+    x.len <- length(xt)
 
 	# make the Heaviside function times 2. For fft(), note that at discontinuities, h(f) -> 0.5 * [h(f-) + h(f+)],
 	#	and that the indices are defined as follows:
@@ -49,17 +53,24 @@ analytic.ts <- function(xt) {
 	}
 
 	if ( multi.trace == TRUE ) {
-		xa <- x.data
-		for ( cn in 1:dim(x.data)[2] ) {
-			x <- as.vector(x.data[,cn])
+		xa <- xt
+		for ( cn in 1:dim(xt)[2] ) {
+			x <- as.vector(xt[,cn])
+			if ( is(xt, "signalSeries") )
+			  x <- as.vector(xt[,cn]@data)
+			else
+			  x <- as.vector(xt[,cn])
 			Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
 			# multiply dft of input by Heaviside function, and take inverse transform
 			xa[,cn] <- fft(Xf * Hf, inverse=TRUE)
 		}
 	} else {
 		# get dft of the input data
-		x <- as.vector(x.data)
-		Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
+	  if ( is(xt, "signalSeries") )
+	    x <- as.vector(xt@data)
+	  else
+	    x <- as.vector(xt)
+	  Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
 		# multiply dft of input by Heaviside function, and take inverse transform
 		xa <- fft(Xf * Hf, inverse=TRUE)
 	}

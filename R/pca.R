@@ -1,11 +1,11 @@
 #' Polarization analysis using principal components
 #'
 #' \code{pca} determines several polarization measures of an input 3-component
-#' time series using principal component analysis
+#' time series using principal component analysis.
 #'
-#' @param xt,yt,zt Equally-sampled univariate input series for the the X, Y,
+#' @param xt,yt,zt Equally-sampled univariate input series for the X, Y,
 #' and Z directions. Alternatively, \code{xt} can be a multivariate time series
-#' with X, Y, and Z data in the first 3 positions (and in that order). Must
+#' with X, Y, and Z data in the first 3 positions (and in that order). Input must
 #' convert to numeric \code{\link{vector}}, \code{\link{matrix}},
 #' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
 #' @param dt Sample interval, in seconds. Default is 0.01, or \code{deltat}
@@ -14,7 +14,7 @@
 #' @param pct Percentage of data window to apply a \code{\link{hanning}} taper.
 #' Must be between 0 and 50. Default is 0 (no taper).
 #'
-#' @details Here's how it works...
+#' @details Computes polarization measures
 #' @return List with the polarization directions and measures.
 #' @seealso \code{\link{hanning}}, \code{\link{analytic.ts}},
 #' \code{\link{acf.xyz}}, \code{\link{eigen}}
@@ -66,17 +66,20 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 
 	# taper, if requested
 	if ( ! is.na(pct) )
-		xyz <- hanning(xyz, pct = pct, demean = TRUE)
+		xyz <- hanning(xyz, pct = pct, demean)
 
 	# convert to analytic time series, if requested
+	# TODO: acf only works with real inputs; need replacement to work with complex
 	#if ( analytic )
-	#	xyz <- analytic.ts(xyz)
+	#  xyz <- analytic.ts(xyz)
 
-	# get the auto and cross covariances. Note: acf only accepts real inputs
-	acf.xyz <- acf(xyz, lag.max = 10, type="covariance", demean=TRUE, plot=FALSE)
+	# get the auto and cross covariances. Note: acf accepts only real inputs
+	acf.xyz <- acf(xyz, lag.max = 10, type="covariance", demean, plot=FALSE)
+
+	# get cross-correlations at lag 0: rho[1,2], rho[1,3], and rho[2,3]
 	rho <- c((acf.xyz$acf[1,1,2]*acf.xyz$acf[1,1,2])/(acf.xyz$acf[1,1,1]*acf.xyz$acf[1,2,2]),
 					 (acf.xyz$acf[1,1,3]*acf.xyz$acf[1,1,3])/(acf.xyz$acf[1,1,1]*acf.xyz$acf[1,3,3]),
-					 (acf.xyz$acf[1,2,3]*acf.xyz$acf[1,2,3])/(acf.xyz$acf[1,2,2]*acf.xyz$acf[1,2,2]))
+					 (acf.xyz$acf[1,2,3]*acf.xyz$acf[1,2,3])/(acf.xyz$acf[1,2,2]*acf.xyz$acf[1,3,3]))
 	rho <- sqrt(rho)
 
 	# get SVD
@@ -91,26 +94,69 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 	#ev$values # 1x3 vector of eigenvalues
 	#ev$vectors # 3x3 matrix whose columns are the eigenvectors
 
-	# get azimuth for principal eigenvector, defined by tan(az) = y/x
+	#----- get azimuth for principal eigenvector, defined by tan(az) = y/x,
+	# recalling that 1 = X, 2 = Y, 3 = Z
 	s3 = sign(ev$vectors[3,1]) # Jurkevics (1988)
 	az <- atan2(ev$vectors[2,1] * s3, ev$vectors[1,1] * s3)
-	az <- az * 180 / pi
+	az <- az * 180 / pi # convert to degrees
 
-	# get angle of incidence for principal eigenvector, defined by tan(ain) = (sqrt(x^2+y^2)/z)
+	# assume that X = E, Y = N, Z = up; az is ccl from X (E), but we
+	# want azimuth cl from N, so need to adjust
+	az <- 90 - az
+
+	#----- get angle of incidence for the principal eigenvector,
+	# defined by tan(ain) = (sqrt(x^2+y^2)/z)
+	# Vidale (1986)
 	ain <- atan2(sqrt(ev$vectors[2,1] * ev$vectors[2,1] + ev$vectors[1,1] * ev$vectors[1,1]), ev$vectors[3,1])
-	# ain <- acos(ev$vectors[3,1]) # Jurkevics (1988)
-	ain <- ain * 180 / pi
+	# Jurkevics (1988)
+	# ain <- acos(ev$vectors[3,1])
+	ain <- ain * 180 / pi # convert to degrees
 
-	# get rectilinearity measure from eigenvalues
-	rect <- 1 - (ev$values[2] + ev$values[3]) / ev$values[1]
-	# rect <- 1 - 0.5 * (ev$values[2] + ev$values[3]) / ev$values[1] # Jurkevics (1988)
-	# rect <- sqrt(0.5 * ((ev$values[1] - ev$values[2])^2 + (ev$values[1] - ev$values[3])^2 + (ev$values[2] - ev$values[3])^2)) / (ev$values[1] + ev$values[2] + ev$values[3]) # Samson & Olson (1980), Bataille & Chiu (1991)
+	# normalize so that 0 < ain <= 90, and 0 <= az < 360
+	if ( ain > 90 ) {
+	  az <- az + 180
+	  ain <- 180 - ain
+	}
+	if ( ain <= 0 ) {
+	  az <- az + 180
+	  ain <- 180 + ain
+	}
+	while ( az > 360 )
+	  az <- az - 360
+	while ( az < 0 )
+	  az <- az + 360
 
-	# get planarity measure from eigenvalues
-	plan <- 1 - 2 * ev$values[3] / (ev$values[1] + ev$values[2]) # Jurkevics (1988)
-	# plan <- 1 - ev$values[2] / ev$values[3] # Vidale (1986)
+	#------ get rectilinearity measure from eigenvalues
+	# Jones et al (2016), pg 969, citing Jurkevics (1988)
+	# rect <- 1 - (ev$values[2] + ev$values[3]) / ev$values[1]
 
-	ret = list(rho=rho, az=az, ain=ain, rect=rect, plan=plan, acf=acf.xyz$acf[1,,], ev=ev)
+	# Jurkevics (1988), pg. 1728
+	rect <- 1 - 0.5 * (ev$values[2] + ev$values[3]) / ev$values[1]
+
+	#------- degreee of polarization
+	# Samson & Olson (1980) eqn. 18, Bataille & Chiu (1991) eqn. 8,
+	# Schimmel & Gallart (2004) eqn, 5, Amoroso et al (2012) eqn. 3.
+	# Note to myself: the 0.5 belongs inside the sqrt, e.g., as written out
+	# in B&C (1991), and follows from the double-summation (6 non-zero terms)
+	dop <- sqrt(0.5 * ((ev$values[1] - ev$values[2])^2 +
+	                      (ev$values[1] - ev$values[3])^2 +
+	                      (ev$values[2] - ev$values[3])^2)) /
+            abs(ev$values[1] + ev$values[2] + ev$values[3])
+
+	#----- get planarity measure from eigenvalues
+
+	# Jurkevics (1988), pg. 1728
+	plan <- 1 - 2 * ev$values[3] / (ev$values[1] + ev$values[2])
+
+	# Vidale (1986)
+	# plan <- 1 - ev$values[2] / ev$values[3]
+
+	#----- get ellipticity
+	# Vidale (1986)
+
+
+	#----- return list of values
+	ret = list(rho=rho, az=az, ain=ain, rect=rect, plan=plan, dop=dop, acf=acf.xyz$acf[1,,], ev=ev)
 
 	return(ret)
 }

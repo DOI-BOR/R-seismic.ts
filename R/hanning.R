@@ -1,11 +1,13 @@
-#' Apply a Weneralized Hann (Tukey) Window to a Time Series
+#' Apply a Generalized Hann (Tukey) Window to a Time Series
 #'
 #' @description
 #' \code{hanning} takes an input time series and multiplies it with a
 #' generalized Hann (Tukey) window. The input time series can be univariate
 #' or multivariate.
 #'
-#' @param x.data Equally-sampled input series. Must convert to a numeric vector.
+#' @param x.data Equally-sampled univariate or multivariate series. Supported
+#' types include a numeric \code{\link{vector}}, \code{\link{matrix}},
+#' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
 #' @param pct Percentage of data window to apply a taper. Must be
 #' between 0 and 50. Default is 0 (no taper).
 #' @param demean Should windowed data be demeaned? Default is F.
@@ -16,14 +18,17 @@
 #' @seealso \code{\link{windowTs}}
 #' @keywords ts
 
-hanning <- function(x.data, pct = NA, demean = FALSE) {
+hanning <- function(x.data, pct = NA, demean = NA) {
+
+  if ( is.na(demean) )
+    demean = FALSE
 
 	multi.trace <- is.mts(x.data) || is.matrix(x.data) || length(dim(x.data)) > 1 ||
 			( is(x.data, "signalSeries") && ! is.null(dim(x.data)) )
 
 	if ( multi.trace == TRUE ) {
     if ( is(x.data, "signalSeries") )
-      xt.len <- dim(x.data)[1]
+      x.len <- dim(x.data)[1]
     else
       x.len <- dim(x.data)[1]
 	} else
