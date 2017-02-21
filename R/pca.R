@@ -66,7 +66,7 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 
 	# taper, if requested
 	if ( ! is.na(pct) )
-		xyz <- hanning(xyz, pct = pct, demean)
+		xyz <- hanning(xyz, pct=pct, demean=demean)
 
 	# convert to analytic time series, if requested
 	# TODO: acf only works with real inputs; need replacement to work with complex
@@ -74,7 +74,7 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 	#  xyz <- analytic.ts(xyz)
 
 	# get the auto and cross covariances. Note: acf accepts only real inputs
-	acf.xyz <- acf(xyz, lag.max = 10, type="covariance", demean, plot=FALSE)
+	acf.xyz <- acf(xyz, lag.max = 10, type="covariance", demean=demean, plot=FALSE)
 
 	# get cross-correlations at lag 0: rho[1,2], rho[1,3], and rho[2,3]
 	rho <- c((acf.xyz$acf[1,1,2]*acf.xyz$acf[1,1,2])/(acf.xyz$acf[1,1,1]*acf.xyz$acf[1,2,2]),
@@ -128,10 +128,10 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA)
 
 	#------ get rectilinearity measure from eigenvalues
 	# Jones et al (2016), pg 969, citing Jurkevics (1988)
-	# rect <- 1 - (ev$values[2] + ev$values[3]) / ev$values[1]
+	rect <- 1 - (ev$values[2] + ev$values[3]) / ev$values[1]
 
 	# Jurkevics (1988), pg. 1728
-	rect <- 1 - 0.5 * (ev$values[2] + ev$values[3]) / ev$values[1]
+	# rect <- 1 - 0.5 * (ev$values[2] + ev$values[3]) / ev$values[1]
 
 	#------- degreee of polarization
 	# Samson & Olson (1980) eqn. 18, Bataille & Chiu (1991) eqn. 8,
