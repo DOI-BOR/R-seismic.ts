@@ -86,6 +86,7 @@ integ.signalSeries <- function(x.data, dt=NA, order=NA) {
 	if ( is.na(dt) )
 	  dt <- 0.01
 	start <- x.data@positions@from
+	units.position <- x.data@units.position
 
 	units <- x.data@units
 	if ( is.na(units) || is.null(units) ) {
@@ -111,21 +112,21 @@ integ.signalSeries <- function(x.data, dt=NA, order=NA) {
 		xi.data = NULL
 		for ( cn in 1:dim(x.data)[2] ) {
 			ok <- ! is.na(x.data[,cn]@data)
-			Ix <- dt_integ(x.data[ok,cn], order)
-			Ix@data <- Ix@data * dt
-			ss <- c(ss, Ix@data[length(Ix)])
+			Ix <- dt_integ(x.data[ok,cn], order) * dt
+			ss <- c(ss, Ix[length(Ix)])
 			if ( is.null(xi.data) )
-				xi.data <- signalSeries(Ix, from = start, by = dt, units = new.units)
+				xi.data <- data.frame(Ix)
 			else
-				xi.data <- signalSeries(data.frame(xi.data@data, Ix@data), from = start, by = dt, units = new.units)
+			  xi.data <- data.frame(xi.data, Ix)
 		}
 	} else {
 		ok <- ! is.na(x.data@data)
-		Ix <- dt_integ(x.data[ok], order)
-		Ix@data <- Ix@data * dt
-		ss <- c(ss, Ix@data[length(Ix)])
-		xi.data <- signalSeries(Ix@data, from = start, by = dt, units = new.units)
+		Ix <- dt_integ(x.data[ok], order) * dt
+		ss <- c(ss, Ix[length(Ix)])
+		xi.data <- Ix
 	}
+	xi.data <- signalSeries(xi.data, from = start, by = dt, units = new.units,
+	                        units.position=units.position)
 	names(xi.data) <- names(x.data)
 	list(sum=ss,Ix.data=xi.data)
 }
