@@ -29,18 +29,18 @@
 #'
 ai <- function(at, dt=NA, in.units=NA) {
 
-	if ( is(xt, "signalSeries") || is(xt, "ts") )
-	  dt <- deltat(xt)
+	if ( is(at, "signalSeries") || is(at, "ts") )
+	  dt <- deltat(at)
 	if ( is.na(dt) )
 	  dt <- 0.01
 
 	start <- 0
-	if ( is(xt, "signalSeries") ) {
-	  in.units <- xt@units
-	  start <- xt@from
+	if ( is(at, "signalSeries") ) {
+	  in.units <- at@units
+	  start <- at@from
 	}
-	if ( is(xt, "ts") )
-	  start <- start(xt)[1]
+	if ( is(at, "ts") )
+	  start <- start(at)[1]
 
 	if ( is.na(in.units) )
 	  in.units <- "cgs"
@@ -56,9 +56,9 @@ ai <- function(at, dt=NA, in.units=NA) {
 
 	AI = ai.integral[len]
 	ai.integral <- ai.integral / AI
-	if ( is(xt, "signalSeries") )
+	if ( is(at, "signalSeries") )
 	  ai.integral <- signalSeries(ai.integral, from=start, by=dt, units=AI.units)
-	else if ( is(xt, "ts") )
+	else if ( is(at, "ts") )
 	  ai.integral <- ts(ai.integral, delta=dt, start=start)
 
 	ai.dur <- length(which(ai.integral >= .05 & ai.integral <= 0.95)) * dt

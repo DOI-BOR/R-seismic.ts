@@ -104,7 +104,7 @@ wienerFilter <- function(x.data, z.data, length.filt = NULL, lag = NULL,
 	min.error <- getNMSE(azz, azx, ls.filter)
 
 	# get predicted output
-	z.est <- my.filter(x, ls.filter)
+	z.est <- filter.zpad(x, ls.filter)
 	if ( demean )
 		z.est <- z.est + z.mean
 

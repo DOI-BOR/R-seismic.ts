@@ -1,26 +1,23 @@
-#' Convolve a filter with an input timeseries, after zero-padding both
+#' Convolve a filter with a time series, after zero-padding both
 #'
 #' @description
-#' \code{filter.zpad} takes an input time series and a filter, zero-pads
-#' both of them, and then convolves the two series. This avoids wrao-around
-#' effects that otherwise may occur.
+#' \code{filter.zpad} takes a univariate time series of length n and a univariate
+#' filter of length m, zero-pads both of them to length n + m - 1, and then filters
+#' the two zero-padded series. This avoids wrap-around effects that otherwise may occur.
 #'
-#' @param x Equally-sampled input series. Must convert to a numeric vector.
-#' @param filt Equally-sampled filter series. Must convert to a numeric vector.
-#' @return The convolved time series.
-#' @details For factor > 1, this code augments by zero-padding the Fourier
-#' transform of the input series at frequencies greater than the Nyquist,
-#' and then taking the inverse transform.
+#' @param x Equally-sampled univariate time series. Must convert to a numeric vector.
+#' @param filt Equally-sampled univariate filter series. Must convert to a numeric vector.
+#' @return The filtered time series.
 #' @seealso \code{\link{filter}}
 #' @keywords ts
 
-filter.zpad <- function(x, f, truncate = F) {
+filter.zpad <- function(x, filt, truncate = F) {
 	x.len <- length(x)
-	f.len <- length(f)
-	aug.len <- x.len + f.len - 1 # actual length of filtered time series
+	filt.len <- length(filt)
+	aug.len <- x.len + filt.len - 1 # actual length of filtered time series
 	if ( truncate )
 		out.len <- x.len # truncate output to input data length
 	else
 		out.len <- aug.len # full output
-	filter(zero.pad(x,aug.len), zero.pad(f,aug.len), method = "convolution", sides = 1, circular = T)[1:out.len]
+	filter(zero.pad(x,aug.len), zero.pad(filt,aug.len), method = "convolution", sides = 1, circular = T)[1:out.len]
 }
