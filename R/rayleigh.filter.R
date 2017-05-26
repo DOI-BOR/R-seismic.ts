@@ -46,12 +46,12 @@ rayleigh.filter <- function(a, b, I, strike, pitch, reject.rayleigh=TRUE)
     stop("Length of a, b, and I must be the same")
 
   ire.selector <- b / a # aka Instaneous Reciprocal Ellipticity (IRE)
-  # Rayleigh waves should have IRE < 0.5
-  F <- cos.filter(ire.selector, 0.5, 0.6)
+  # Rayleigh waves should have IRE > 0.5
+  F <- cos.filter(ire.selector, 0.5, 0.4) # Pinnegar uses 0.6, 0.5
 
   # Rayleigh waves should have dip - pi/2 ~ 0
   dip.selector <- abs(I - pi/2)
-  F <- F * cos.filter(dip.selector, pi/10, pi/5)
+  F <- F * cos.filter(dip.selector, pi/8, pi/4) # Pinnegar uses pi/10, pi/5
 
   if ( ! missing(strike) ) {
     if ( length(strike) != la )
@@ -82,8 +82,14 @@ rayleigh.filter <- function(a, b, I, strike, pitch, reject.rayleigh=TRUE)
 cos.filter <- function(selector, v1, v2) {
   len <- length(selector)
   conv.filter <- as.double(rep(1, len))
-  conv.filter[which(selector < v1)] <- 0
-  sel <- which(v1 <= selector & selector <= v2)
-  conv.filter[sel] <- 0.5 * (1 + cos(pi*(v2 - selector[sel]) / (v2 - v1)))
+  if ( v1 < v2 ) {
+    conv.filter[which(selector < v1)] <- 0
+    sel <- which(v1 <= selector & selector <= v2)
+    conv.filter[sel] <- 0.5 * (1 + cos(pi*(v2 - selector[sel]) / (v2 - v1)))
+  } else {
+    conv.filter[which(selector > v1)] <- 0
+    sel <- which(v2 <= selector & selector <= v1)
+    conv.filter[sel] <- 0.5 * (1 + cos(pi*(selector[sel] - v2) / (v1 - v2)))
+  }
   return(1 - conv.filter)
 }
