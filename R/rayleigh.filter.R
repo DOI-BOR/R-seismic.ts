@@ -3,15 +3,15 @@
 #' \code{rayleigh.filter} determines a filter for identifying Rayleigh waves using
 #' a previously computed superposition-of-ellipses decomposition.
 #'
-#' @param a major axis of ellipse, from \code{\link{superlips}}
-#' @param b minor axis of ellipse, from \code{\link{superlips}}
-#' @param I inclination (dip) of ellipse plane, from \code{\link{superlips}}
+#' @param a major axis of ellipse, from \code{\link{super.ellips}}
+#' @param b minor axis of ellipse, from \code{\link{super.ellips}}
+#' @param I inclination (dip) of ellipse plane, from \code{\link{super.ellips}}
 #' @param strike strike of ellipse plane (\code{big-omega} from
-#' \code{\link{superlips}}). If provided, the filter will select strike
+#' \code{\link{super.ellips}}). If provided, the filter will select strike
 #' angles ~ 0, which only makes sense if the original data was rotated so
 #' that X=radial, and Y=transverse directions.
 #' @param pitch pitch of the major axis of the ellipse (\code{little-omega}
-#' from \code{\link{superlips}}). If provided, the filter
+#' from \code{\link{super.ellips}}). If provided, the filter
 #' will select pitch angles ~ pi/2.
 #' @param reject.rayleigh set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
 #' reject everything but Rayleigh waves. Default is \code{TRUE}
@@ -23,7 +23,7 @@
 #' typically are obtained by then inverse-transforming these products.
 #' @return Filter for rejecting or selecting Rayleigh waves.  If the \code{dim}
 #' attribute is set on the inputs, it will be set on the returned filter as well.
-#' @seealso \code{\link{superlips}}
+#' @seealso \code{\link{super.ellips}}
 #' \itemize{
 #' \item \href{http://gji.oxfordjournals.org/content/165/2/596.abstract}{Pinnegar (2006)}
 #' Polarization analysis and polarization filtering of three-component signals with the

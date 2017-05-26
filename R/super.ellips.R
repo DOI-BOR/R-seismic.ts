@@ -1,6 +1,6 @@
 #' 3D complex waveform decomposition using superposition of ellipses
 #'
-#' \code{superlips} decomposes the complex transform of a 3-component waveform
+#' \code{super.ellips} decomposes the complex transform of a 3-component waveform
 #' into an equivalent superposition of ellipses, from which polarization
 #' attributes can be determined. Typically, inputs are the complex Fourier
 #' or S Transforms of a 3-component seismogram.
@@ -12,8 +12,8 @@
 #' then convert the ouput elliptical parameters to matrix form, with
 #' \code{\link{dim} = c(nrow,ncol)}, and filled by row.
 #'
-#' @details The code implements the methods of Pinnegar (2006) to compute the
-#' following elliptical elements for each input point:
+#' @details The code implements the methods of Pinnegar (2006) to compute
+#' for each input point the following elliptical elements:
 #' \describe{
 #' \item{\code{a}}{Semi-major axis of the ellipse. \code{a >= 0}}
 #' \item{\code{b}}{Semi-minor axis of the ellipse. \code{a >= b >= 0}}
@@ -27,7 +27,7 @@
 #' }
 #' See Pinnegar (2006) for details. The elliptical elements can be used to
 #' compute polarization attributes. For example, the Instaneous Reciprocal
-#' Ellipticity (IRE) is determined from \code{MRE = b / a}. Filters also can
+#' Ellipticity (IRE) is determined from \code{IRE = b/a}. Filters also can
 #' be determined from the elemts to select or reject Rayleigh waves
 #' (e.g., see \code{\link{rayleigh.filter}})
 #' @return List with the elliptical elements described above.
@@ -43,7 +43,7 @@
 #' }
 #' @keywords ts
 
-superlips <- function(X, Y, Z, nr=NA, nc=NA)
+super.ellips <- function(X, Y, Z, nr=NA, nc=NA)
 {
   if ( missing(X) || missing(Y) || missing(Z) )
     stop("Must provide input X, Y, and Z")
@@ -76,7 +76,7 @@ superlips <- function(X, Y, Z, nr=NA, nc=NA)
 
   # angle between the ascending node and the long axis
   little.omega0 <- atan2(b * (Re(Z) * cos(phi0) - Im(Z) * sin(phi0)),
-                         -a * (Re(Z) * sin(phi0) - Im(Z) * cos(phi0)))
+                         -a * (Re(Z) * sin(phi0) + Im(Z) * cos(phi0)))
   little.omega <- little.omega0 - 0.5 * pi * (sign(little.omega0) - 1)
 
   # phase, measured w.r.t. the time of maximum displacement
@@ -86,17 +86,17 @@ superlips <- function(X, Y, Z, nr=NA, nc=NA)
   if ( is.null(dimX) && ! is.na(nr) && ! is.na(nc)) {
     dimOut <- c(nc,nr)
     dim(a) <- dimOut
-    a <- tr(a)
+    a <- t(a)
     dim(b) <- dimOut
-    b <- tr(b)
+    b <- t(b)
     dim(I) <- dimOut
-    I <- tr(I)
+    I <- t(I)
     dim(big.omega) <- dimOut
-    big.omega <- tr(big.omega)
+    big.omega <- t(big.omega)
     dim(little.omega) <- dimOut
-    little.omega <- tr(little.omega)
+    little.omega <- t(little.omega)
     dim(phi) <- dimOut
-    phi <- tr(phi)
+    phi <- t(phi)
   }
 
   #----- return list of values
