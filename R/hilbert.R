@@ -5,7 +5,7 @@
 #'
 #' @param x.data Equally-sampled input series. Must convert to numeric vector.
 #' @param op Operation to perform. One of
-#' c("hilbert", "envelope", "instphase", "instfreq"). Default is "hilbert"
+#' \code{c("hilbert", "envelope", "instphase", "instfreq")}. Default is \code{"hilbert"}
 #' @param zero.pad Zero-pad the input using \code{\link{zero.pad}} before
 #' transforming. Default is TRUE.
 #' @param dt Sample interval, in seconds. Default is 0.01.
