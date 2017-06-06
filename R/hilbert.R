@@ -27,9 +27,9 @@ hilbert <- function(x.data, op = "hilbert", zero.pad = TRUE, dt = 0.01) {
 	xa <- analytic.ts(x)
 	result <- NULL
 	if ( op == "hilbert" ) {
-		result <- -Im(xa)
+		result <- Im(xa)
 	} else if ( op == "envelope" ) {
-		result <- abs(xa)
+		result <- Mod(xa)
 	} else if ( op == "instphase" ) {
 		inst.phase <- atan2(Im(xa),Re(xa))
 		result <- unwrap.phase(inst.phase)

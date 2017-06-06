@@ -8,7 +8,7 @@
 #' types include a numeric \code{\link{vector}}, \code{\link{matrix}},
 #' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
 #' @details The analytic signal s(t) of a function f(t) is defined
-#' by s(t) = f(t) - i * Hilbert(f(t)), where H(f(t)) is the Hilbert
+#' by s(t) = f(t) + i * Hilbert(f(t)), where H(f(t)) is the Hilbert
 #' transform of f(t). This code uses the Fourier transform to compute
 #' the anatic signal, using the property that s(t) <=> 2 * H(omega) * F(omega),
 #' where H() is the Heaviside function, and f(t) <=> F(omega).

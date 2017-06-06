@@ -13,7 +13,7 @@
 #' @param pitch pitch of the major axis of the ellipse (\code{little-omega}
 #' from \code{\link{super.ellips}}). If provided, the filter
 #' will select pitch angles ~ pi/2.
-#' @param reject.rayleigh set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
+#' @param reject set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
 #' reject everything but Rayleigh waves. Default is \code{TRUE}
 #'
 #' @details Computes a filter that selects or rejects Rayleigh waves based on
@@ -34,7 +34,7 @@
 #' }
 #' @keywords ts
 
-rayleigh.filter <- function(a, b, I, strike, pitch, reject.rayleigh=TRUE)
+rayleigh.filter <- function(a, b, I, strike, pitch, reject=TRUE)
 {
   if ( missing(a) || missing(b) || missing(I) )
     stop("Must provide input a, b, and I")
@@ -69,7 +69,7 @@ rayleigh.filter <- function(a, b, I, strike, pitch, reject.rayleigh=TRUE)
     F <- F * cos.filter(pitch.selector, pi/8, pi/4)
   }
 
-  if ( reject.rayleigh )
+  if ( reject )
     F <- 1 - F
 
   # apply same matrix structure to F as a (if any)

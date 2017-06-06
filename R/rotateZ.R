@@ -1,7 +1,6 @@
 #' Rotate 3-component data about the Z axis
 #'
-#' \code{rotateZ} rotates a 3-component time-series in a counter-clockwise
-#' direction about the positive Z axis.
+#' \code{rotateZ} rotates a 3-component time-series about the positive Z axis.
 #'
 #' @param xt,yt,zt equally-spaced time series in the X, Y, and Z directions. At
 #' a minimum, the X and Y components must be present. If inputs \code{xt},
@@ -11,7 +10,8 @@
 #' including \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}},
 #' \code{\link{mts}} or \code{\link{signalSeries}}, then the Y and Z components
 #' are taken from \code{xt}, and \code{yt} and \code{zt} are not used.
-#' @param phi angle from positive X axis to positive R axis, in radians
+#' @param phi rotation angle about positive Z axis (from positive X axis towards
+#' positive Y axis), in radians
 #' @param cnames vector of column names to use for the rotated components.
 #' Default is to append the rotation angle, in degrees, to the original
 #' component name (or XYZ if the original component names are not set).
