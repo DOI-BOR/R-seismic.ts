@@ -50,9 +50,9 @@
 #' \item{T}{Transverse values. The transverse direction depends on frequency and time}
 #' \item{ZH}{Hilbert transform of vertical values. \code{ZH} is correlated with
 #' \code{R}} to get the radial direction.
-#' \item{theta}{The complement of \code{phi}: \code{theta = pi/2 - phi}}
 #' \item{phi}{The angle to the radial direction, measured from the positive \code{X}
-#' axis towards the positive \code{Y} asis, about the positive \code{Z} axis.}
+#' axis towards the positive \code{Y} asis, about the positive \code{Z} axis.}. Note
+#' that \code{range(phi) = -pi/2, pi/2}.
 #' \item{rho}{another estimate of theta. The radial direction depends on frequency and time}
 #' }
 #' @seealso \code{\pkg{ngft}}, \code{\link{rayleigh.filter}}
@@ -121,9 +121,6 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   posf.end <- negf.start - 1
   negf.end <- lx
 
-  #warning("fo.end=",f0.end," posf.start=",posf.start," posf.end=",posf.end,
-  #  " negf.start=",negf.start," negf.end=",negf.end)
-
   # This function uses the Hilbert transform of the Z component. In frequency space,
   # this requires shifting positive frequencies by -pi/2 and negative frequencies
   # by +pi/2. To apply the phase shift, we need to multiply each element of
@@ -133,16 +130,13 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   ZH[posf.start:posf.end] <- Z[posf.start:posf.end] * -1i
   ZH[negf.start:negf.end] <- Z[negf.start:negf.end] * 1i
 
-  # get the Rayleigh wave azimuth at each frequency and time
+  # get the Rayleigh wave propagation azimuth at each frequency and time
   phi <- atan2(Re(Y)*Re(ZH) + Im(Y)*Im(ZH), Re(X)*Re(ZH) + Im(X)*Im(ZH))
   phi[1:f0.end] = atan2(Re(Y[1:f0.end]), Re(X[1:f0.end])) # handle 0-frequency case
-  if ( ! startsWith(motion,"p") ) {
-    phi <- phi - pi
-    ind <- which(phi < -pi)
-    phi[ind] <- phi[ind] + 2 * pi
-    ind <- which(phi > pi)
-    phi[ind] <- phi[ind] - 2 * pi
-  }
+
+  # restrict azimuth from -pi < phi < pi to -pi/2 < phi < pi/2
+  phi <- phi + 0.5 * pi * (1 - sign(cos(phi)))
+  phi <- normalize.angle(phi)
 
   # get radial and transverse components at each frequency and time
   R <- X * cos(phi) + Y * sin(phi)
@@ -165,12 +159,6 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   if ( reject )
     F <- 1 - F
 
-  theta <- 0.5 * pi - phi
-  ind <- which(theta < -pi)
-  theta[ind] <- theta[ind] + 2 * pi
-  ind <- which(theta > pi)
-  theta[ind] <- theta[ind] - 2 * pi
-
   # get reference direction transverse to theta
   rho.r <- atan2(Re(Y), Re(X))
 
@@ -186,8 +174,6 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
     T <- t(T)
     dim(ZH) <- dimtf
     ZH <- t(ZH)
-    dim(theta) <- dimtf
-    theta <- t(theta)
     dim(phi) <- dimtf
     phi <- t(phi)
     dim(rho.r) <- dimtf
@@ -195,8 +181,24 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   }
 
   #----- return list of values
-  ret = list(F=F, nip=NIP.RZH, R=R, T=T, ZH=ZH, theta=theta,
-             phi=phi, rho=rho.r)
+  ret = list(F=F, nip=NIP.RZH, R=R, T=T, ZH=ZH, phi=phi, rho=rho.r)
 
   return(ret)
+}
+
+#' Normalize angle to between -pi and pi
+#'
+#' \code{normalize.angle} normalizes an input angle so that
+#' it takes on the principal value between -pi and pi.
+#'
+#' @param phi vector or scalar angle, in radians
+#'
+#' @return The principal value of the angle
+#'
+normalize.angle <- function(phi) {
+  ind <- which(phi < -pi)
+  phi[ind] <- phi[ind] + 2 * pi
+  ind <- which(phi > pi)
+  phi[ind] <- phi[ind] - 2 * pi
+  return(phi)
 }

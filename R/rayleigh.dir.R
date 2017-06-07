@@ -1,8 +1,8 @@
-#' Get azimuth from Rayleigh-wave polarization
+#' Get propagation azimuth from Rayleigh-wave polarization
 #'
-#' \code{rayleigh.dir} estimates the azimuth from source to receiver using
-#' the Rayleigh wave polarization direction from a 3-component seismic waveform,
-#' assuming retrograde (default) or prograde motion.
+#' \code{rayleigh.dir} estimates the propagation azimuth from source to receiver
+#' using the Rayleigh wave polarization direction from a 3-component seismic
+#' waveform, assuming retrograde (default) or prograde motion.
 #'
 #' @param x,y,z equally-spaced seismograms in the X, Y, and Z directions.
 #' @param retrograde Set to \code{TRUE} to assume retrograde motion (default).
@@ -35,13 +35,8 @@ rayleigh.dir <- function(x, y, z, retrograde = TRUE) {
 
   # get source to receiver angle (azimuth relative to positive X-direction)
   phi <- atan2(sum(y*zh), sum(x*zh))
-  if ( retrograde ) {
-    phi <- phi - pi
-    if ( phi < -pi )
-      phi <- phi + 2 * pi
-    if ( phi > pi )
-      phi <- phi - 2 * pi
-  }
+  if ( retrograde )
+    phi <- normalize.angle(phi - pi)
 
   return(phi)
 }
