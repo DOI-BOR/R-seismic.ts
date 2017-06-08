@@ -1,4 +1,4 @@
-#' Rayleigh and Love wave filtering
+#' Rayleigh and Love wave filtering using NIP
 #'
 #' \code{nip.filter} generates a multiplicative filter from the Fourier or
 #' S-transform of a 3-component seismogram, using the normalized inner product (NIP)
@@ -6,7 +6,30 @@
 #'
 #' @param X,Y,Z Equal-length \code{complex} input vectors or matrices for the X, Y,
 #' and Z directions, and representing the complex Fourier or S Transforms of the
-#' original 3-component data. The layout of the input can vary with the type of
+#' original 3-component data.
+#' @param nf Number of frequencies (rows). Must be specified for the case of Fourier
+#' transforms, or for S-Transforms which are input as N-length column vectors (i.e,
+#' for each time index \code{1:nt}, there are \code{1:nf} frequency values, and
+#' \code{N = nf * nt}). Frequencies are assumed to be in standard order (zero,
+#' positive, negative). Not used otherwise.
+#' @param reject set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
+#' reject everything but Rayleigh waves. Default is \code{TRUE}
+#' @param motion Type of motion to filter. One of \code{c("prograde", "retrograde",
+#' "all")}. Only the first character is used. Default is \code{"all"}.
+#' @param plus.x \code{TRUE} if Rayleigh wave propagation direction is in the \code{+X}
+#' half-plane (\code{-pi/2 < phi > pi/2}), and \code{FALSE} if it is in the \code{-X}
+#' half-plane. Needed because this method can't distinguish between retrograde motion
+#' in the \code{+X} direction and prograde motion in the \code{-X} direction. Default
+#' is \code{TRUE}.
+#' @param posf.start,negf.start Index into \code{X}, \code{Y}, and \code{Z} of
+#' the starting index for positive and negative frequencies. Only needed for
+#' S-transforms that are NOT in standard (rectangular) form, such as fast S-transforms.
+#'
+#' @details The code implements methods based on Meza-Fajardo et al (2015) to
+#' compute the filter. See Meza-Fajardo et al (2015) for details. Either the \code{dim}
+#' attribute must be set on the \code{ X, Y, Z} inputs, or the layout must be
+#' specified using the \code{nf} or \code{posf.start, negf.start} paramaters.
+#' The layout of the input can vary with the type of
 #' the transform, but this function only needs to be able to ascertain which elements
 #' correspond to positive, negative, and zero frequencies. If the input is a
 #' matrix, then it is assumed to be in "standard" form with \code{nf} frequency rows
@@ -21,23 +44,7 @@
 #' followed by the positive and then negative frequency values, and the
 #' \code{posf.start} and \code{negf.start} parameters must be used to specify the
 #' starting indices of the positive and negative frequency values.
-#' @param nf Number of frequencies (rows). Must be specified for the case of Fourier
-#' transforms, or for S-Transforms which are input as N-length column vectors (i.e,
-#' for each time index \code{1:nt}, there are \code{1:nf} frequency values, and
-#' \code{N = nf * nt}). Frequencies are assumed to be in standard order (zero,
-#' positive, negative). Not used otherwise.
-#' @param reject set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
-#' reject everything but Rayleigh waves. Default is \code{TRUE}
-#' @param motion Type of motion to filter. One of \code{c("prograde", "retrograde",
-#' "all")}. Only the first character is used. Default is \code{"all"}.
-#' @param posf.start,negf.start Index into \code{X}, \code{Y}, and \code{Z} of
-#' the starting index for positive and negative frequencies. Only needed for
-#' S-transforms that are NOT in standard (rectangular) form, such as fast S-transforms.
-#'
-#' @details The code implements methods based on Meza-Fajardo et al (2015) to
-#' compute the filter. See Meza-Fajardo et al (2015) for details. Either the \code{dim}
-#' attribute must be set on the \code{ X, Y, Z} inputs, or the layout must be
-#' specified using the \code{nf} or \code{posf.start, negf.start} paramaters.
+
 #' @return List that includes the filter and other values. The layout of these values will
 #' be a row-filled matrix for matrix inputs, or a vector for variable frequency-time
 #' partitions. The elements of the returned list are as follows:
@@ -46,10 +53,7 @@
 #' or reject data in the transform domain. Inverse transform the data after multiplication
 #' by the filter to get the time-domain result.}
 #' \item{nip}{Normalized inner-product. Will range from -1 to 1.}
-#' \item{R}{Radial values. The radial direction depends on frequency and time}
-#' \item{T}{Transverse values. The transverse direction depends on frequency and time}
-#' \item{ZH}{Hilbert transform of vertical values. \code{ZH} is correlated with
-#' \code{R}} to get the radial direction.
+#' \item{ZH}{Hilbert transform of vertical values.
 #' \item{phi}{The angle to the radial direction, measured from the positive \code{X}
 #' axis towards the positive \code{Y} asis, about the positive \code{Z} axis.}. Note
 #' that \code{range(phi) = -pi/2, pi/2}.
@@ -64,7 +68,7 @@
 #' }
 #' @keywords ts
 
-nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
+nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
                        posf.start=NA, negf.start=NA) {
   if ( missing(X) || missing(Y) || missing(Z) )
     stop("Must provide input X, Y, and Z")
@@ -130,12 +134,22 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   ZH[posf.start:posf.end] <- Z[posf.start:posf.end] * -1i
   ZH[negf.start:negf.end] <- Z[negf.start:negf.end] * 1i
 
-  # get the Rayleigh wave propagation azimuth at each frequency and time
+  # get the raw Rayleigh wave propagation azimuth at each frequency and time
   phi <- atan2(Re(Y)*Re(ZH) + Im(Y)*Im(ZH), Re(X)*Re(ZH) + Im(X)*Im(ZH))
   phi[1:f0.end] = atan2(Re(Y[1:f0.end]), Re(X[1:f0.end])) # handle 0-frequency case
 
-  # restrict azimuth from -pi < phi < pi to -pi/2 < phi < pi/2
-  phi <- phi + 0.5 * pi * (1 - sign(cos(phi)))
+  # Retrograde motion in the +X direction is indistinguisable from prograde
+  # motion in the -X direction, and vice versa. Therefore, we need to
+  # restrict the raw azimuth from its range of -pi < phi < pi to:
+  # (a) -pi/2 < phi < pi/2 (propagation in +X direction), or (b) pi/2 < phi < 3*pi/2
+  # (propagation in the -X direction). The sign of NIP will then indicate
+  # prograde (+) or retrograde (-) motion. The function sign(cos(phi)) indicates
+  # which half-plane we're in, and thus whether we need to add a factor of pi
+  # to the raw phi to get to the correct quadrant
+  sign.x = 1
+  if ( ! plus.x )
+    sign.x = -1
+  phi <- phi + 0.5 * pi * (1 - sign.x * sign(cos(phi)))
   phi <- normalize.angle(phi)
 
   # get radial and transverse components at each frequency and time
@@ -159,7 +173,7 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   if ( reject )
     F <- 1 - F
 
-  # get reference direction transverse to theta
+  # get reference direction transverse to phi
   rho.r <- atan2(Re(Y), Re(X))
 
   if ( matrix.in ) {
@@ -168,10 +182,6 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
     F <- t(F)
     dim(NIP.RZH) <- dimtf
     NIP.RZH <- t(NIP.RZH)
-    dim(R) <- dimtf
-    R <- t(R)
-    dim(T) <- dimtf
-    T <- t(T)
     dim(ZH) <- dimtf
     ZH <- t(ZH)
     dim(phi) <- dimtf
@@ -181,19 +191,19 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all",
   }
 
   #----- return list of values
-  ret = list(F=F, nip=NIP.RZH, R=R, T=T, ZH=ZH, phi=phi, rho=rho.r)
+  ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho.r)
 
   return(ret)
 }
 
-#' Normalize angle to between -pi and pi
+#' Get the principal value of an angle
 #'
 #' \code{normalize.angle} normalizes an input angle so that
 #' it takes on the principal value between -pi and pi.
 #'
-#' @param phi vector or scalar angle, in radians
+#' @param phi vector or scalar angle, in radians.
 #'
-#' @return The principal value of the angle
+#' @return The principal value of the angle, in radians.
 #'
 normalize.angle <- function(phi) {
   ind <- which(phi < -pi)
