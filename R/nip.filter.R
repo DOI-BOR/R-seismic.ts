@@ -136,19 +136,19 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
 
   # get the raw Rayleigh wave propagation azimuth at each frequency and time
   phi <- atan2(Re(Y)*Re(ZH) + Im(Y)*Im(ZH), Re(X)*Re(ZH) + Im(X)*Im(ZH))
-  phi[1:f0.end] = atan2(Re(Y[1:f0.end]), Re(X[1:f0.end])) # handle 0-frequency case
+  phi[1:f0.end] <- atan2(Re(Y[1:f0.end]), Re(X[1:f0.end])) # handle 0-frequency case
 
   # Retrograde motion in the +X direction is indistinguisable from prograde
   # motion in the -X direction, and vice versa. Therefore, we need to
   # restrict the raw azimuth from its range of -pi < phi < pi to:
   # (a) -pi/2 < phi < pi/2 (propagation in +X direction), or (b) pi/2 < phi < 3*pi/2
-  # (propagation in the -X direction). The sign of NIP will then indicate
-  # prograde (+) or retrograde (-) motion. The function sign(cos(phi)) indicates
+  # (propagation in the -X direction). The function sign(cos(phi)) indicates
   # which half-plane we're in, and thus whether we need to add a factor of pi
-  # to the raw phi to get to the correct quadrant
-  sign.x = 1
+  # to the raw phi to get the correct quadrant. After restricting the azimuth,
+  # the sign of NIP will then indicate prograde (+) or retrograde (-) motion.
+  sign.x <- 1
   if ( ! plus.x )
-    sign.x = -1
+    sign.x <- -1
   phi <- phi + 0.5 * pi * (1 - sign.x * sign(cos(phi)))
   phi <- normalize.angle(phi)
 
@@ -156,12 +156,21 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
   R <- X * cos(phi) + Y * sin(phi)
   T <- -X * sin(phi) + Y * cos(phi)
 
+  # get reference direction transverse to phi
+  #rho <- atan2(Re(Y), Re(X))
+  #rho <- atan2(Re(Y)*Re(R) + Im(Y)*Im(R), Re(X)*Re(R) + Im(X)*Im(R))
+  rho <- atan2(Re(Y)*Re(T) + Im(Y)*Im(T), Re(-X)*Re(T) + Im(-X)*Im(T)) # rho=pi/2 for transverse
+  #rho <- atan2(Re(-X)*Re(T) + Im(-X)*Im(T), Re(Y)*Re(T) + Im(Y)*Im(T)) # rho=0 for transverse
+  rho <- rho + 0.5 * pi * (1 - sign.x * sign(cos(rho)))
+  rho <- normalize.angle(rho)
+  #rho <- rho + 0.25 * pi * (1 - sign(sin(rho)))
+
   # get NIP between R and Hilbert transform of Z
   NIP.RZH <- (Re(R) * Re(ZH) + Im(R) * Im(ZH)) / (Mod(R) * Mod(ZH))
 
-  # Construct filter from NIP. Rayleigh waves should have |NIP| > 0.8
-  v1 = 0.9
-  v2 = 0.8
+  # Construct filter from NIP.RZH. Rayleigh waves should have |NIP.RZH| > 0.8
+  v1 <- 0.9
+  v2 <- 0.8
   nip.selector <- NIP.RZH
   if ( startsWith(motion,"a") ) {
     nip.selector <- abs(NIP.RZH)
@@ -170,28 +179,44 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     v2 <- -v2
   }
   F <- cos.filter(nip.selector, v1, v2)
+
+  # get NIP between horizontal components. +/-1 for linearly-polarized
+  #NIP.XY <- abs(Re(X) * Re(Y) + Im(X) * Im(Y)) / (Mod(X) * Mod(Y))
+  #NIP.XY <- abs(Re(R) * Re(T) + Im(R) * Im(T)) / (Mod(R) * Mod(T))
+  # For stability, use axes rotated pi/4 from T and R
+  RX <-  R * cos(-pi/4) + T * sin(-pi/4)
+  RY <- -R * sin(-pi/4) + T * cos(-pi/4)
+  NIP.XY <- abs(Re(RX) * Re(RY) + Im(RX) * Im(RY)) / (Mod(RX) * Mod(RY))
+
+  # Construct filter from NIP.XY. Body and Love waves should have |NIP.XY| > 0.8
+  v1 <- 0.7
+  v2 <- 0.8
+  nip.selector <- abs(NIP.XY)
+  F.XY <- cos.filter(nip.selector, v1, v2)
   if ( reject )
-    F <- 1 - F
+    F.XY <- 1 - F.XY
 
-  # get reference direction transverse to phi
-  rho.r <- atan2(Re(Y), Re(X))
-
+  # convert outputs to matrices, if inputs were matrices
   if ( matrix.in ) {
     dimtf <- c(nt, nf)
     dim(F) <- dimtf
     F <- t(F)
     dim(NIP.RZH) <- dimtf
     NIP.RZH <- t(NIP.RZH)
+    dim(F.XY) <- dimtf
+    F.XY <- t(F.XY)
+    dim(NIP.XY) <- dimtf
+    NIP.XY <- t(NIP.XY)
     dim(ZH) <- dimtf
     ZH <- t(ZH)
     dim(phi) <- dimtf
     phi <- t(phi)
-    dim(rho.r) <- dimtf
-    rho.r <- t(rho.r)
+    dim(rho) <- dimtf
+    rho <- t(rho)
   }
 
   #----- return list of values
-  ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho.r)
+  ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho, nip.xy=NIP.XY, F.xy=F.XY)
 
   return(ret)
 }

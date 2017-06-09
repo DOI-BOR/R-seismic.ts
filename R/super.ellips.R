@@ -37,9 +37,6 @@
 #' \item \href{http://gji.oxfordjournals.org/content/165/2/596.abstract}{Pinnegar (2006)}
 #' Polarization analysis and polarization filtering of three-component signals with
 #' the time-frequency S transform.
-#' \item \href{http://www.bssaonline.org/content/105/1/210.abstract}{Meza-Fajardo et al (2015)}
-#' Identification and Extraction of Surface Waves from Three-Component Seismograms
-#' Based on the Normalized Inner Product.
 #' }
 #' @keywords ts
 
