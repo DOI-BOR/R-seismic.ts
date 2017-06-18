@@ -22,7 +22,7 @@ augment <- function(xt, factor=NA) {
 		factor = 1.;
 	if ( factor < 1. ) {
 		# decimate, rather than augment. Data must already be suitably low-pass filtered
-		x.aug <- ilsd::decimate(xt, 1./factor)
+		x.aug <- decimate(xt, 1./factor)
 	} else if ( factor > 1. ) {
 		# augment by zero-padding the FFT at frequencies greater than the Nyquist, and
 	  # then taking the inverse transform

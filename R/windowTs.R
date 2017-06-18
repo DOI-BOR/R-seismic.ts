@@ -15,7 +15,7 @@
 #' "Blackmann-Harris", "Exact_Blackmann"). Default is "Hanning"
 #' @param norm Normalize tapered data to preserve rms. Default is F
 #'
-#' @return the windowed, demeaned, and tapered data, , with the same object type as
+#' @return the windowed, demeaned, and tapered data, with the same object type as
 #' the input.
 #' @seealso \code{\link{hanning}}
 #' @keywords ts
@@ -56,7 +56,7 @@ windowTs.default <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
 
 	return(wt)
 }
-setGeneric("windowTs",def=windowTs.default)
+setGeneric("windowTs", def=windowTs.default)
 
 #' @describeIn windowTs.default windows a \code{ts} or \code{mts} object.
 windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
@@ -99,7 +99,7 @@ windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
 
   return(wt)
 }
-setMethod("windowTs","ts",windowTs.ts)
+setMethod("windowTs", "ts", windowTs.ts)
 
 #' @describeIn windowTs.default windows a \code{signalSeries} object.
 windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
@@ -124,9 +124,9 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
                   as.double(tw), as.logical(demean), as.double(pct),
                   as.character(type), as.logical(norm))
       if ( is.null(xt) )
-        wt.mts <- signalSeries(wt, from = start, by = dt, units = new.units)
+        wt.mts <- signalSeries(wt, from=start, by=dt, units=units)
       else
-        wt.mts <- signalSeries(data.frame(wt.mts@data, wt@data), from = start, by = dt, units = new.units)
+        wt.mts <- signalSeries(data.frame(wt.mts@data, wt), from=start, by=dt, units=units)
     }
     wt <- wt.mts
   } else {
@@ -138,12 +138,12 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
                 as.double(xt[ok]@data), as.double(dt), as.double(t0),
                 as.double(tw), as.logical(demean), as.double(pct),
                 as.character(type), as.logical(norm))
-    wt <- signalSeries(wt, from = start, by = dt, units = new.units)
+    wt <- signalSeries(wt, from=start, by=dt, units=units)
   }
   names(wt) <- names(xt)
 
   return(wt)
 }
-setMethod("windowTs","signalSeries",windowTs.signalSeries)
+setMethod("windowTs", "signalSeries", windowTs.signalSeries)
 
 

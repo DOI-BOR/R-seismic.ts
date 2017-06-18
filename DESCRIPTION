@@ -2,7 +2,7 @@ Package: seismic.ts
 Type: Package
 Title: Time Series Utilities for Seismic Signals
 Version: 0.2.11
-Date: 2017-06-18
+Date: 2017-06-19
 Author: Chris Wood
 Maintainer: Chris Wood <cwood@usbr.gov>
 Description: Utilities for handling seismic time series, including

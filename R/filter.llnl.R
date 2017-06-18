@@ -29,8 +29,8 @@
 #' Characters are case-insensitive, and only need to uniquely
 #' define the option (e.g., "BE" is sufficient to select Bessel). Default is
 #' Butterworth.
-#' @param f.lo Low-pass filter corner frequency, in Hz. Default is 2 / (len(xt) * dt).
-#' @param f.hi Hi-pass filter corner frequency, in Hz. Default is 1 / (3 * dt), which
+#' @param f.lo Low-cut filter corner frequency, in Hz. Default is 2 / (len(xt) * dt).
+#' @param f.hi Hi-cut filter corner frequency, in Hz. Default is 1 / (3 * dt), which
 #' is 1/3 of the Nyquist frequency.
 #' @param dir Filter direction: \code{c("forward", "reverse", "zp", "both", "zerophase")}.
 #' Characters are case-insensitive, and only need to uniquely define
