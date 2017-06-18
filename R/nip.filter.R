@@ -12,8 +12,10 @@
 #' for each time index \code{1:nt}, there are \code{1:nf} frequency values, and
 #' \code{N = nf * nt}). Frequencies are assumed to be in standard order (zero,
 #' positive, negative). Not used otherwise.
-#' @param reject set to \code{TRUE} to reject Rayleigh waves, or \code{FALSE} to
-#' reject everything but Rayleigh waves. Default is \code{TRUE}
+#' @param reject If \code{TRUE}, then reject Rayleigh waves (and optionally,
+#' if \code{xy.filter} is \code{TRUE}, waves that are not also linearly polarized
+#' in the \code{X-Y} plane). If \code{FALSE}, then select Rayleigh waves. Default
+#' is \code{TRUE}
 #' @param motion Type of motion to filter. One of \code{c("prograde", "retrograde",
 #' "all")}. Only the first character is used. Default is \code{"all"}.
 #' @param plus.x \code{TRUE} if Rayleigh wave propagation direction is in the \code{+X}
@@ -21,6 +23,8 @@
 #' half-plane. Needed because this method can't distinguish between retrograde motion
 #' in the \code{+X} direction and prograde motion in the \code{-X} direction. Default
 #' is \code{TRUE}.
+#' @param xy.filter If \code{TRUE}, also apply a NIP filter for linearly-polarized
+#' motion in the \code{X-Y} plane. Default is \code{TRUE}.
 #' @param posf.start,negf.start Index into \code{X}, \code{Y}, and \code{Z} of
 #' the starting index for positive and negative frequencies. Only needed for
 #' S-transforms that are NOT in standard (rectangular) form, such as fast S-transforms.
@@ -53,11 +57,12 @@
 #' or reject data in the transform domain. Inverse transform the data after multiplication
 #' by the filter to get the time-domain result.}
 #' \item{nip}{Normalized inner-product. Will range from -1 to 1.}
-#' \item{ZH}{Hilbert transform of vertical values.
+#' \item{ZH}{Hilbert transform of vertical values.}
 #' \item{phi}{The angle to the radial direction, measured from the positive \code{X}
-#' axis towards the positive \code{Y} asis, about the positive \code{Z} axis.}. Note
-#' that \code{range(phi) = -pi/2, pi/2}.
-#' \item{rho}{another estimate of theta. The radial direction depends on frequency and time}
+#' axis towards the positive \code{Y} asis, about the positive \code{Z} axis. Note
+#' that \code{range(phi) = -pi/2, pi/2}.}
+#' \item{rho}{another estimate of theta. The radial direction depends on frequency
+#' and time.}
 #' }
 #' @seealso \code{\pkg{ngft}}, \code{\link{rayleigh.filter}}
 #' \itemize{
@@ -69,7 +74,7 @@
 #' @keywords ts
 
 nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
-                       posf.start=NA, negf.start=NA) {
+                       xy.filter=TRUE, posf.start=NA, negf.start=NA) {
   if ( missing(X) || missing(Y) || missing(Z) )
     stop("Must provide input X, Y, and Z")
   if ( ! is.complex(X) || ! is.complex(Y) || ! is.complex(Z) )
@@ -178,35 +183,53 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     v1 <- -v1
     v2 <- -v2
   }
-  F <- cos.filter(nip.selector, v1, v2)
+  F.RZH <- cos.filter(nip.selector, v1, v2)
 
-  # get NIP between horizontal components. +/-1 for linearly-polarized
-  #NIP.XY <- abs(Re(X) * Re(Y) + Im(X) * Im(Y)) / (Mod(X) * Mod(Y))
-  #NIP.XY <- abs(Re(R) * Re(T) + Im(R) * Im(T)) / (Mod(R) * Mod(T))
-  # For stability, use axes rotated pi/4 from T and R
-  RX <-  R * cos(-pi/4) + T * sin(-pi/4)
-  RY <- -R * sin(-pi/4) + T * cos(-pi/4)
-  NIP.XY <- abs(Re(RX) * Re(RY) + Im(RX) * Im(RY)) / (Mod(RX) * Mod(RY))
+  if ( xy.filter ) {
+    # get NIP between horizontal components, +/-1 for linearly-polarized
+    #NIP.XY <- abs(Re(X) * Re(Y) + Im(X) * Im(Y)) / (Mod(X) * Mod(Y))
+    #NIP.XY <- abs(Re(R) * Re(T) + Im(R) * Im(T)) / (Mod(R) * Mod(T))
+    # For stability, use axes rotated pi/4 from T and R
+    RX <-  R * cos(-pi/4) + T * sin(-pi/4)
+    RY <- -R * sin(-pi/4) + T * cos(-pi/4)
+    NIP.XY <- abs(Re(RX) * Re(RY) + Im(RX) * Im(RY)) / (Mod(RX) * Mod(RY))
 
-  # Construct filter from NIP.XY. Body and Love waves should have |NIP.XY| > 0.8
-  v1 <- 0.7
-  v2 <- 0.8
-  nip.selector <- abs(NIP.XY)
-  F.XY <- cos.filter(nip.selector, v1, v2)
-  if ( reject )
-    F.XY <- 1 - F.XY
+    # Construct filter from NIP.XY. Body and Love waves should have |NIP.XY| > 0.8
+    v1 <- 0.7
+    v2 <- 0.8
+    nip.selector <- abs(NIP.XY)
+    F.XY <- cos.filter(nip.selector, v1, v2)
+  }
 
-  # convert outputs to matrices, if inputs were matrices
+  if ( reject ) {
+    # get filter to reject Rayleigh waves
+    if ( xy.filter ) {
+      F <- F.XY * (1 - F.RZH) # further, select only linearly-polarized waves
+    } else {
+      F <- 1 - F.RZH
+    }
+  } else {
+    # get filter to select Rayleigh waves
+    if ( xy.filter ) {
+      F <- F.RZH * (1 - F.XY) # further, reject linearly-polarized waves
+    } else {
+      F <- F.RZH
+    }
+  }
+
+    # convert outputs to matrices, if inputs were matrices
   if ( matrix.in ) {
     dimtf <- c(nt, nf)
     dim(F) <- dimtf
     F <- t(F)
     dim(NIP.RZH) <- dimtf
     NIP.RZH <- t(NIP.RZH)
-    dim(F.XY) <- dimtf
-    F.XY <- t(F.XY)
-    dim(NIP.XY) <- dimtf
-    NIP.XY <- t(NIP.XY)
+    if ( xy.filter ) {
+      dim(F.XY) <- dimtf
+      F.XY <- t(F.XY)
+      dim(NIP.XY) <- dimtf
+      NIP.XY <- t(NIP.XY)
+    }
     dim(ZH) <- dimtf
     ZH <- t(ZH)
     dim(phi) <- dimtf
@@ -216,7 +239,7 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
   }
 
   #----- return list of values
-  ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho, nip.xy=NIP.XY, F.xy=F.XY)
+  ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho)
 
   return(ret)
 }

@@ -71,9 +71,9 @@ hanning <- function(x.data, pct = NA, demean = NA) {
 	}
 
 	if ( is(x.data, "signalSeries") )
-		x.data@data <- taper * x.data@data
+	  x.data@data <- taper * x.data@data
 	else
-		x.taper <- taper * x.data
+	  x.data <- taper * x.data
 
-	return(x.taper)
+	return(x.data)
 }

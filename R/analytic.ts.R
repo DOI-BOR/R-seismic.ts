@@ -53,8 +53,8 @@ analytic.ts <- function(xt) {
 	}
 
 	if ( multi.trace == TRUE ) {
-		xa <- xt
-		for ( cn in 1:dim(xt)[2] ) {
+	  xa <- xt # make a copy of the input (and copy any attributes)
+	  for ( cn in 1:dim(xt)[2] ) {
 			x <- as.vector(xt[,cn])
 			if ( is(xt, "signalSeries") )
 			  x <- as.vector(xt[,cn]@data)
@@ -62,7 +62,10 @@ analytic.ts <- function(xt) {
 			  x <- as.vector(xt[,cn])
 			Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
 			# multiply dft of input by Heaviside function, and take inverse transform
-			xa[,cn] <- fft(Xf * Hf, inverse=TRUE)
+			if ( is(xt, "signalSeries") )
+			  xa[,cn]@data <- fft(Xf * Hf, inverse=TRUE)
+			else
+			  xa[,cn] <- fft(Xf * Hf, inverse=TRUE)
 		}
 	} else {
 		# get dft of the input data
@@ -72,7 +75,16 @@ analytic.ts <- function(xt) {
 	    x <- as.vector(xt)
 	  Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
 		# multiply dft of input by Heaviside function, and take inverse transform
-		xa <- fft(Xf * Hf, inverse=TRUE)
+	  if ( is(xt, "signalSeries") )
+	    xa@data <- fft(Xf * Hf, inverse=TRUE)
+	  else
+	    xa <- fft(Xf * Hf, inverse=TRUE)
+	}
+
+	# copy attributes for ts objects
+	if ( ! is.null(tsp(xt)) ) {
+	  tsp(xa) <- tsp(xt)
+	  dimnames(xa) <- dimnames(xt)
 	}
 
 	return (xa)
