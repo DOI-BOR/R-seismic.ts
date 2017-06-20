@@ -4,7 +4,10 @@
 #' using the Rayleigh wave polarization direction from a 3-component seismic
 #' waveform, assuming retrograde (default) or prograde motion.
 #'
-#' @param x,y,z equally-spaced seismograms in the X, Y, and Z directions.
+#' @param xt,yt,zt Equally-sampled univariate input series for the X, Y,
+#' and Z directions. Alternatively, \code{xt} can be a multivariate time series
+#' with X, Y, and Z data in the first 3 positions (and in that order). Input must
+#' convert to numeric \code{\link{vector}}, \code{\link{matrix}},
 #' @param plus.x \code{TRUE} if Rayleigh wave propagation angle \code{phi} is in the \code{+X}
 #' half-plane (\code{-pi/2 < phi < pi/2}), and \code{FALSE} if it is in the \code{-X}
 #' half-plane. Needed because this method can't distinguish between retrograde motion
@@ -25,20 +28,15 @@
 #' }
 #' @keywords ts
 
-rayleigh.dir <- function(x, y, z, plus.x=TRUE) {
-  if ( missing(x) || missing(y) || missing(z) )
-    stop("Must provide input x, y, and z")
+rayleigh.dir <- function(xt, yt=NA, zt=NA, plus.x=TRUE) {
+  # get mts representing the input data
+  xyz <- get.xyz(xt, yt, zt, NA, FALSE, 0, 0)
 
-  lx <- length(x)
-  ly <- length(y)
-  lz <- length(z)
-  if ( lx != ly && lx != lz )
-    stop("Length of x, y, and z must be the same")
   # get the Hilbert transform of z
-  zh <- hilbert(z, op = "hilbert", zero.pad = FALSE)
+  zh <- hilbert(xyz[,3], op = "hilbert", zero.pad = FALSE)
 
   # get raw source to receiver angle
-  phi <- atan2(sum(y*zh), sum(x*zh))
+  phi <- atan2(sum(xyz[,2]*zh), sum(xyz[,1]*zh))
 
   # Retrograde motion in the +X direction is indistinguisable from prograde
   # motion in the -X direction, and vice versa. Therefore, we need to

@@ -49,6 +49,7 @@ decimate.default <- function(xt, factor = NA, lp.filter=FALSE) {
 	      xdt.mts <- data.frame(xdt.mts,xdt)
 	  }
 	  xt.dec <- xdt.mts
+	  colnames(xt.dec) <- colnames(xt)
 	} else {
 	  len <- length(xt)
 	  if ( len < 2 )
@@ -89,13 +90,13 @@ decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
         xdt.mts <- ts(data.frame(xdt.mts,xdt), start=start, deltat=dt)
     }
     xt.dec <- xdt.mts
+    colnames(xt.dec) <- colnames(xt)
   } else {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
     xt.dec <- ts(dec.vec(xt), start=start, deltat=dt)
   }
-  delta
 
   return(xt.dec)
 }
@@ -131,13 +132,13 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
         xdt.mts <- signalSeriess(data.frame(xdt.mts@data,xdt), from=start, by=dt, units=units)
     }
     xt.dec <- xdt.mts
+    colnames(xt.dec@data) <- colnames(xt)
   } else {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
     xt.dec <- ts(dec.vec(xt@data), from=start, by=dt, units=units)
   }
-  delta
 
   return(xt.dec)
 }
@@ -159,7 +160,7 @@ dec.vec <- function(xt, factor=NA, lp.filter=FALSE) {
                     f.hi=f.hi, dir="zp")
     }
     x.len <- length(xt)
-    x.dec <- x[seq(1,x.len,skip)]
+    x.dec <- xt[seq(1,x.len,skip)]
   }
   return ( x.dec )
 }

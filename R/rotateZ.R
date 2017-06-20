@@ -50,6 +50,8 @@
 #' rotateZ(xt.ss, phi=45*deg2rad, cnames=c("XR","YR","Z"))
 #'
 #' @keywords ts
+deg2rad <- pi / 180
+rad2deg <- 180 / pi
 
 #' @describeIn rotateZ.default rotates \code{vector} univariate
 #' time series, or a \code{matrix} multivariate time series.
