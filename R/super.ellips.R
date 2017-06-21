@@ -109,6 +109,10 @@ super.ellips <- function(X, Y, Z, nr=NA, nc=NA)
     big.omega <- t(big.omega)
     dim(little.omega) <- dimOut
     little.omega <- t(little.omega)
+    dim(theta) <- dimOut
+    theta <- t(theta)
+    dim(zeta) <- dimOut
+    zeta <- t(zeta)
     dim(phi) <- dimOut
     phi <- t(phi)
   }
