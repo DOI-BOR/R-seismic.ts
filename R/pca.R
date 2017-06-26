@@ -304,9 +304,9 @@ get.xyz <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
       stop("multivariate time series must have at least 3 components (x, Y, and z)")
     len <- dim(xt)[1]
     if ( is(xt, "signalSeries") ) {
-      x <- xt[,1]@data
-      y <- xt[,2]@data
-      z <- xt[,3]@data
+      x <- xt@data[,1]
+      y <- xt@data[,2]
+      z <- xt@data[,3]
     } else {
       x <- xt[,1]
       y <- xt[,2]

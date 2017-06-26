@@ -5,8 +5,8 @@
 #' the digital  equivalents of common analog filter types. It is derived from the
 #' Seismic Analysis Code (SAC) package from Lawrence Livermore National Labs.
 #'
-#' @param xt Equally-sampled input series, including a numeric \code{\link{vector}},
-#' \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}},
+#' @param xt Equally-sampled input time series, including a numeric \code{\link{vector}},
+#' \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}}, \code{\link{mts}}
 #' or \code{\link{signalSeries}}.
 #' @param dt Sample interval, in seconds. Default is 0.01 if input is not a
 #' \code{\link{ts}} or \code{\link{signalSeries}}.
@@ -89,8 +89,9 @@ filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
 	    if ( is.null(dxdt.mts) )
 	      ft.mts <- data.frame(ft)
 	    else
-	      ft.mts <- data.frame(ft.mts,ft)
+	      ft.mts <- data.frame(ft.mts, ft)
 	  }
+	  colnames(ft.mts) <- colnames(xt)
 	  ft <- ft.mts
 	} else {
 	  xt <- as.double(xt[!is.na(xt)])
@@ -136,10 +137,11 @@ filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
                   as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
       if ( is.null(ft.mts) )
-        ft.mts <- ts(ft, start = start, deltat = dt)
+        ft.mts <- data.frame(ft)
       else
-        ft.mts <- ts(data.frame(ft.mts, ft), start = start, deltat = dt)
+        ft.mts <- data.frame(ft.mts, ft)
     }
+    colnames(ft.mts) <- colnames(xt)
     ft <- ft.mts
   } else {
     xt <- as.double(xt[!is.na(xt)])
@@ -150,9 +152,8 @@ filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                 xt, as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
-    ft <- ts(ft, start = start, deltat = dt)
   }
-  dimnames(ft) <- dimnames(xt)
+  ft <- ts(ft, start=start, deltat=dt)
 
   return(ft)
 }
@@ -166,6 +167,7 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
     dt <- deltat(xt)
   start <- xt@positions@from
   units <- xt@units
+  units.position <- xt@units.position
 
   # do basic sanity checking, and silently fix obviously bad values
   if ( ! is.na(order) )
@@ -181,16 +183,17 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
       stop("input time series must have at least 3 valid points")
     ft.mts = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      ok <- ! is.na(xt[,ii]@data)
+      ok <- ! is.na(xt@data[,ii])
       ft <- .Call("CALLfilter_ts",
                   as.double(xt[ok,ii]@data), as.double(dt), as.integer(order), as.character(pb.type),
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
                   as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
-      if ( is.null(xt) )
-        dxdt.mts <- signalSeries(dxdt, from = start, by = dt, units = new.units)
+      if ( is.null(ft.mts) )
+        ft.mts <- data.frame(ft)
       else
-        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from = start, by = dt, units = units)
+        ft.mts <- data.frame(ft.mts, ft)
     }
+    colnames(ft.mts) <- colnames(xt@data)
     ft <- ft.mts
   } else {
     ok <- ! is.na(xt@data)
@@ -201,9 +204,9 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
                 as.double(xt[ok]@data), as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
-    ft <- signalSeries(ft, from = start, by = dt, units = units)
   }
   names(ft) <- names(xt)
+  ft <- signalSeries(ft, from=start, by=dt, units=units, units.position=units.position)
 
   return(ft)
 }

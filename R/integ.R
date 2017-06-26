@@ -1,22 +1,32 @@
 #' Integrate a time series
 #'
+#' @description
 #' \code{integ} performs discrete-time integration of a univariate or
 #' multivariate time series.
 #'
-#' @param x.data Equally-sampled input series. Must convert to a numeric
-#' \code{\link{vector}}, \code{\link{signalSeries}}, or \code{\link{ts}}.
-#' @param dt Sample interval. Default is 0.01 seconds if input is not a
-#' \code{\link{ts}} or \code{\link{signalSeries}}.
+#' @param x.data Equally-sampled input time series, including a numeric \code{\link{vector}},
+#' \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}}, \code{\link{mts}}
+#' or \code{\link{signalSeries}}.
+#' @param dt Sample interval, in seconds. Normally only used for \code{\link{vector}},
+#' \code{\link{matrix}}, or \code{\link{data.frame}} input objects. If input is a
+#' \code{\link{ts}}, \code{\link{mts}}, or \code{\link{signalSeries}}, then the sample
+#' interval will be taken from the object attributes. However, if \code{\link{deltat}}
+#' is not set, then \code{dt} will be used. Default is 0.01 seconds.
 #' @param order Order of the discrete-time integrator to use: 0 = Backwards
 #' rectangular, 1 = Trapezoidal, 2 = Simpson. Default is 2.
 #'
 #' @details These are generic functions. Implementation is in R,
 #' using appropriate calls to \code{\link{cumsum}}.
-#' @return List containing the cumulative sum, and the integrated time series.
-#' @seealso \code{\link{cumsum}}
+#' @return List containing the cumulative sum, and the integrated time series
+#' (which has the same object type as the input).
+#' @seealso \code{\link{ts}}, \code{\link{mts}}, \code{\link{signalSeries}},
+#' \code{\link{deltat}}, \code{\link{cumsum}}, and \code{\link{deriv.fd}}.
 #' @keywords ts
 #'
 
+#' @describeIn integ.default integ.default integrates a \code{\link{vector}}
+#' univariate time series, and \code{\link{matrix}} or \code{\link{data.frame}}
+#' multivariate time series.
 integ.default <- function(x.data, dt=NA, order=NA) {
   if ( is.na(dt) )
     dt <- 0.01
@@ -25,28 +35,31 @@ integ.default <- function(x.data, dt=NA, order=NA) {
 
 	ss <- NULL
 	if ( multi.trace ) {
-		xi.data = NULL
+		ix.mts = NULL
 		for ( cn in 1:dim(x.data)[2] ) {
 			ok <- ! is.na(x.data[,cn])
-			Ix <- dt_integ(x.data[ok,cn], order) * dt
-			ss <- c(ss, Ix[length(Ix)])
-			if ( is.null(xi.data) )
-				xi.data <- data.frame(Ix)
+			ix <- dt_integ(x.data[ok,cn], order) * dt
+			ss <- c(ss, ix[length(ix)])
+			if ( is.null(ix.mts) )
+			  ix.mts <- data.frame(ix)
 			else
-				xi.data <- data.frame(xi.data,Ix)
+			  ix.mts <- data.frame(ix.mts, ix)
 		}
+	  colnames(ix.mts) <- colnames(x.data)
+	  Ix <- ix.mts
 	} else {
 		ok <- ! is.na(x.data)
 		Ix <- dt_integ(x.data[ok], order) * dt
 		ss <- c(ss, Ix[length(Ix)])
-		xi.data <- Ix
 	}
-	colnames(xi.data) <- colnames(x.data)
-	list(sum=ss,Ix.data=xi.data)
+	ret <- list(sum=ss, Ix.data=Ix)
+
+	return(ret)
 }
 setGeneric("integ",def=integ.default)
 
-#' @describeIn integ.default integrates a \code{ts}
+#' @describeIn integ.default integrates a \code{\link{ts}} or \code{\link{mts}}
+#' univariate or multivariate time series
 integ.ts <- function(x.data, dt=NA, order=NA) {
 	multi.trace <- is.mts(x.data)
 	dt <- deltat(x.data)
@@ -56,28 +69,33 @@ integ.ts <- function(x.data, dt=NA, order=NA) {
 
 		ss <- NULL
 	if ( multi.trace == TRUE ) {
-		xi.data = NULL
+		ix.mts = NULL
 		for ( cn in 1:dim(x.data)[2] ) {
 			ok <- ! is.na(x.data[,cn])
-			Ix <- dt_integ(x.data[ok,cn], order) * dt
-			ss <- c(ss, Ix[length(Ix)])
-			if ( is.null(xi.data) )
-				xi.data <- ts(Ix, deltat = dt)
+			ix <- dt_integ(x.data[ok,cn], order) * dt
+			ss <- c(ss, ix[length(ix)])
+			if ( is.null(ix.mts) )
+			  ix.mts <- data.frame(ix)
 			else
-				xi.data <- ts(data.frame(xi.data, Ix), deltat = dt)
+			  ix.mts <- data.frame(ix.mts, ix)
 		}
+	  colnames(ix.mts) <- colnames(x.data)
+	  Ix <- ix.mts
 	} else {
 		ok <- ! is.na(x.data)
 		Ix <- dt_integ(x.data[ok], order) * dt
 		ss <- c(ss, Ix[length(Ix)])
-		xi.data <- ts(Ix, deltat = dt)
 	}
-	dimnames(xi.data) <- dimnames(x.data)
-	list(sum=ss,Ix.data=xi.data)
+	Ix <- ts(Ix, start=start, deltat=dt)
+
+	ret <- list(sum=ss, Ix.data=Ix)
+
+	return(ret)
 }
 setMethod("integ","ts",integ.ts)
 
-#' @describeIn integ.default integrates a \code{signalSeries}
+#' @describeIn integ.default integrates a \code{\link{signalSeries}}
+#' univariate or multivariate time series
 integ.signalSeries <- function(x.data, dt=NA, order=NA) {
 
 	multi.trace <- ! is.null(dim(x.data))
@@ -109,26 +127,29 @@ integ.signalSeries <- function(x.data, dt=NA, order=NA) {
 
 	ss <- NULL
 	if ( multi.trace == TRUE ) {
-		xi.data = NULL
+		ix.mts = NULL
 		for ( cn in 1:dim(x.data)[2] ) {
-			ok <- ! is.na(x.data[,cn]@data)
-			Ix <- dt_integ(x.data[ok,cn], order) * dt
-			ss <- c(ss, Ix[length(Ix)])
-			if ( is.null(xi.data) )
-				xi.data <- data.frame(Ix)
+			ok <- ! is.na(x.data@data[,cn])
+			ix <- dt_integ(x.data@data[ok,cn], order) * dt
+			ss <- c(ss, ix[length(ix)])
+			if ( is.null(ix.mts) )
+			  ix.mts <- data.frame(ix)
 			else
-			  xi.data <- data.frame(xi.data, Ix)
+			  ix.mts <- data.frame(ix.mts, ix)
 		}
+		colnames(ix.mts) <- colnames(x.data@data)
+		Ix <- ix.mts
 	} else {
 		ok <- ! is.na(x.data@data)
-		Ix <- dt_integ(x.data[ok], order) * dt
+		Ix <- dt_integ(x.data@data[ok], order) * dt
 		ss <- c(ss, Ix[length(Ix)])
-		xi.data <- Ix
 	}
-	xi.data <- signalSeries(xi.data, from = start, by = dt, units = new.units,
+	Ix <- signalSeries(Ix, from=start, by=dt, units=new.units,
 	                        units.position=units.position)
-	names(xi.data) <- names(x.data)
-	list(sum=ss,Ix.data=xi.data)
+
+	ret <- list(sum=ss,Ix.data=Ix)
+
+	return(ret)
 }
 setMethod("integ","signalSeries",integ.signalSeries)
 

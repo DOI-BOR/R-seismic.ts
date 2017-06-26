@@ -15,7 +15,7 @@
 #' series before down-sampling, to avoid aliasing. Default is \code{FALSE},
 #' which assumes the user has already done the necessary low-pass filtering.
 #' @return The down-sampled time series is returned, with the same object type
-#' as the input. The sampling interval \code{deltat} will be suitably updated
+#' as the input. The sampling interval \code{deltat} will be updated
 #' for \code{\link{ts}} and \code{\link{signalSeries}} objects.
 #' @details If \code{factor = N > 1}, then a new time series is constructed by
 #' taking every \code{N}th point of the original time series. To avoid aliasing
@@ -26,7 +26,7 @@
 #' Nyquist frequency will be applied to the original time series, using
 #' \code{\link{filter.llnl}}.
 #' @seealso \code{\link{filter.llnl}}, \code{\link{augment}}, \code{\link{ts}},
-#' \code{\link{signalSeries}}.
+#' \code{\link{mts}}, and \code{\link{signalSeries}}.
 #' @keywords ts
 
 #' @describeIn decimate.default decimate a numeric \code{\link{vector}}, or the
@@ -46,15 +46,15 @@ decimate.default <- function(xt, factor = NA, lp.filter=FALSE) {
 	    if ( is.null(xdt.mts) )
 	      xdt.mts <- data.frame(xdt)
 	    else
-	      xdt.mts <- data.frame(xdt.mts,xdt)
+	      xdt.mts <- data.frame(xdt.mts, xdt)
 	  }
+	  colnames(xdt.mts) <- colnames(xt)
 	  xt.dec <- xdt.mts
-	  colnames(xt.dec) <- colnames(xt)
 	} else {
 	  len <- length(xt)
 	  if ( len < 2 )
 	    stop("input time series must have at least 2 valid points")
-	  xt.dec <- dec.vec(xt)
+	  xt.dec <- dec.vec(xt, factor, lp.filter)
 	}
 
 	return(xt.dec)
@@ -85,18 +85,19 @@ decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
     for ( ii in 1:dim(xt)[2] ) {
       xdt <- dec.vec(xt[,ii], factor, lp.filter)
       if ( is.null(xdt.mts) )
-        xdt.mts <- ts(xdt, start=start, deltat=dt)
+        xdt.mts <- data.frame(xdt)
       else
-        xdt.mts <- ts(data.frame(xdt.mts,xdt), start=start, deltat=dt)
+        xdt.mts <- data.frame(xdt.mts, xdt)
     }
+    colnames(xdt.mts) <- colnames(xt)
     xt.dec <- xdt.mts
-    colnames(xt.dec) <- colnames(xt)
   } else {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
-    xt.dec <- ts(dec.vec(xt), start=start, deltat=dt)
+    xt.dec <- dec.vec(xt, factor, lp.filter)
   }
+  xt.dec <- ts(xt.dec, start=start, deltat=dt)
 
   return(xt.dec)
 }
@@ -117,28 +118,30 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
     dt <- dt * as.integer(round(factor))
   start <- xt@positions@from
   units <- xt@units
+  units.position <- xt@units.position
 
   multi.trace <- ! is.null(dim(xt))
   if ( multi.trace ) {
     xt.len <- dim(xt)[1]
     if ( xt.len < 2 )
       stop("input time series must have at least 2 valid points")
-    xdt.mts = NULL
+    xt.dec = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      xdt <- dec.vec(xt[,ii]@data, factor, lp.filter)
+      xdt <- dec.vec(xt@data[,ii], factor, lp.filter)
       if ( is.null(xdt.mts) )
-        xdt.mts <- signalSeries(xdt, from=start, by=dt, units=units)
+        xt.dec <- data.frame(xdt)
       else
-        xdt.mts <- signalSeriess(data.frame(xdt.mts@data,xdt), from=start, by=dt, units=units)
+        xt.dec <- data.frame(xt.dec, xdt)
     }
-    xt.dec <- xdt.mts
-    colnames(xt.dec@data) <- colnames(xt)
+    colnames(xt.dec) <- colnames(xt@data)
   } else {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
-    xt.dec <- ts(dec.vec(xt@data), from=start, by=dt, units=units)
+    xt.dec <- dec.vec(xt@data, factor, lp.filter)
   }
+  xt.dec <- signalSeries(xt.dec, from=start, by=dt, units=units,
+                          units.position=units.position)
 
   return(xt.dec)
 }

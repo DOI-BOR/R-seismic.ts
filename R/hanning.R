@@ -38,7 +38,7 @@ hanning <- function(x.data, pct = NA, demean = NA) {
 		if ( multi.trace == TRUE ) {
 			for ( cn in 1:dim(x.data)[2] ) {
 			  if ( is(x.data, "signalSeries") )
-			    x.data[,cn]@data <- x.data[,cn]@data - mean(x.data[,cn]@data)
+			    x.data@data[,cn] <- x.data@data[,cn] - mean(x.data@data[,cn])
 			  else
 			    x.data[,cn] <- x.data[,cn] - mean(x.data[,cn])
 			}

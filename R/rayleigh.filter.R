@@ -5,7 +5,7 @@
 #'
 #' @param a major axis of ellipse, from \code{\link{super.ellips}}
 #' @param b minor axis of ellipse, from \code{\link{super.ellips}}
-#' @param I inclination (dip) of ellipse plane, from \code{\link{super.ellips}}
+#' @param dip of the ellipse plane (\code{I} from \code{\link{super.ellips}}).
 #' @param strike strike of ellipse plane (\code{big-omega} from
 #' \code{\link{super.ellips}}). If provided, the filter will select strike
 #' angles ~ 0, which only makes sense if the original data was rotated so
@@ -34,36 +34,61 @@
 #' }
 #' @keywords ts
 
-rayleigh.filter <- function(a, b, I, strike, pitch, reject=TRUE)
+rayleigh.filter <- function(a, b, dip, strike, pitch, reject=TRUE)
 {
-  if ( missing(a) || missing(b) || missing(I) )
-    stop("Must provide input a, b, and I")
+  if ( missing(a) || missing(b) || missing(dip) )
+    stop("Must provide input a, b, and dip")
 
   la <- length(a)
   lb <- length(b)
-  lI <- length(I)
-  if ( la != lb || la != lI  )
-    stop("Length of a, b, and I must be the same")
+  ldip <- length(dip)
+  if ( la != lb || la != ldip  )
+    stop("Length of a, b, and dip must be the same")
 
   ire.selector <- b / a # aka Instaneous Reciprocal Ellipticity (IRE)
   # Rayleigh waves should have IRE > 0.5
-  F <- cos.filter(ire.selector, 0.5, 0.4) # Pinnegar uses 0.6, 0.5
+  v1 <- 0.5 # Pinnegar uses 0.6, 0.5
+  v2 <- 0.4
+  F <- cos.filter(ire.selector, v1, v2)
 
   # Rayleigh waves should have dip - pi/2 ~ 0
-  dip.selector <- abs(I - pi/2)
-  F <- F * cos.filter(dip.selector, pi/8, pi/4) # Pinnegar uses pi/10, pi/5
+  #dip.selector <- abs(dip - pi/2)
+  #F <- F * cos.filter(dip.selector, pi/8, pi/4) # Pinnegar uses pi/10, pi/5
+
+  # try to distinguish prograde vs. retrograde. may need to use strike as well
+  # Rayleigh waves should have dip - pi/2 ~ 0
+  motion <- "all" # can't seem to distinguish prograde vs retrograde using dip alone
+  v0 <- 0
+  v1 <- pi/8 # Pinnegar uses pi/10, pi/5
+  v2 <- pi/4
+  dip.selector <- dip - pi/2
+  if ( startsWith(motion,"a") ) {
+    dip.selector <- abs(dip.selector)
+    v0 <- NA
+  } else if ( startsWith(motion,"r") ) {
+    v1 <- -v1
+    v2 <- -v2
+  }
+  F <- F * cos.filter(dip.selector, v1, v2, v0)
 
   if ( ! missing(strike) ) {
     if ( length(strike) != la )
-      stop("Length of a, b, I, and strike must be the same")
+      stop("Length of a, b, dip, and strike must be the same")
+    plus.x <- TRUE
+    sign.x <- 1
+    if ( ! plus.x )
+      sign.x <- -1
+    strike <- strike + 0.5 * pi * (1 - sign.x * sign(cos(strike)))
+    strike <- normalize.angle(strike)
+
     # Rayleigh waves should have strike ~ 0
-    strike.selector <- abs(strike)
-    F <- F * cos.filter(strike.selector, pi/6, pi/3)
+    # strike.selector <- abs(strike)
+    # F <- F * cos.filter(strike.selector, pi/6, pi/3)
   }
 
   if ( ! missing(pitch) ) {
     if ( length(pitch) != la )
-      stop("Length of a, b, I, and pitch must be the same")
+      stop("Length of a, b, dip, and pitch must be the same")
     # Rayleigh waves should have pitch - pi/2 ~ 0
     pitch.selector <- abs(pitch - pi/2)
     F <- F * cos.filter(pitch.selector, pi/8, pi/4)
@@ -79,15 +104,21 @@ rayleigh.filter <- function(a, b, I, strike, pitch, reject=TRUE)
   return(F)
 }
 
-cos.filter <- function(selector, v1, v2) {
+cos.filter <- function(selector, v1, v2, v0=NA) {
   len <- length(selector)
   conv.filter <- as.double(rep(1, len))
   if ( v1 < v2 ) {
-    conv.filter[which(selector < v1)] <- 0
+    if ( is.na(v0) )
+      conv.filter[which(selector < v1)] <- 0
+    else
+      conv.filter[which(v0 <= selector & selector < v1)] <- 0
     sel <- which(v1 <= selector & selector <= v2)
     conv.filter[sel] <- 0.5 * (1 + cos(pi*(v2 - selector[sel]) / (v2 - v1)))
   } else {
-    conv.filter[which(selector > v1)] <- 0
+    if ( is.na(v0) )
+      conv.filter[which(v1 < selector)] <- 0
+    else
+      conv.filter[which(v1 < selector & selector <= v0)] <- 0
     sel <- which(v2 <= selector & selector <= v1)
     conv.filter[sel] <- 0.5 * (1 + cos(pi*(selector[sel] - v2) / (v1 - v2)))
   }

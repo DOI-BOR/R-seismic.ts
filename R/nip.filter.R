@@ -183,7 +183,7 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     v1 <- -v1
     v2 <- -v2
   }
-  F.RZH <- cos.filter(nip.selector, v1, v2)
+  F.RZH <- cos.filter(nip.selector, v1, v2) # selects for Rayleigh waves
 
   if ( xy.filter ) {
     # get NIP between horizontal components, +/-1 for linearly-polarized
@@ -198,20 +198,20 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     v1 <- 0.7
     v2 <- 0.8
     nip.selector <- abs(NIP.XY)
-    F.XY <- cos.filter(nip.selector, v1, v2)
+    F.XY <- cos.filter(nip.selector, v1, v2) # rejects linearly-polarized waves
   }
 
   if ( reject ) {
     # get filter to reject Rayleigh waves
     if ( xy.filter ) {
-      F <- F.XY * (1 - F.RZH) # further, select only linearly-polarized waves
+      F <- 1 - F.XY * F.RZH # further, select linearly-polarized waves
     } else {
       F <- 1 - F.RZH
     }
   } else {
     # get filter to select Rayleigh waves
     if ( xy.filter ) {
-      F <- F.RZH * (1 - F.XY) # further, reject linearly-polarized waves
+      F <- F.RZH * F.XY # further, reject linearly-polarized waves
     } else {
       F <- F.RZH
     }

@@ -63,7 +63,7 @@ analytic.ts <- function(xt) {
 			Xf <- fft(x) / n   # if length(x) is prime, the fft is just the dft
 			# multiply dft of input by Heaviside function, and take inverse transform
 			if ( is(xt, "signalSeries") )
-			  xa[,cn]@data <- fft(Xf * Hf, inverse=TRUE)
+			  xa@data[,cn] <- fft(Xf * Hf, inverse=TRUE)
 			else
 			  xa[,cn] <- fft(Xf * Hf, inverse=TRUE)
 		}

@@ -1,5 +1,9 @@
+deg2rad <- pi / 180
+rad2deg <- 180 / pi
+
 #' Rotate 3-component data about the Z axis
 #'
+#' @description
 #' \code{rotateZ} rotates a 3-component time-series about the positive Z axis.
 #'
 #' @param xt,yt,zt equally-spaced time series in the X, Y, and Z directions. At
@@ -14,7 +18,7 @@
 #' positive Y axis), in radians
 #' @param cnames vector of column names to use for the rotated components.
 #' Default is to append the rotation angle, in degrees, to the original
-#' component name (or XYZ if the original component names are not set).
+#' column name (or \code{c("X", "Y", "Z")} if the original column names are not set).
 #' @param dt Sample interval, in seconds. Not used unless input is a
 #' \code{\link{ts}} or \code{\link{signalSeries}} object, and the time
 #' step of the object is not set. Default is 0.01 seconds.
@@ -22,8 +26,8 @@
 #' @details Computes \code{R = X * cos(phi) + Y * sin(phi)},
 #' and \code{T = -X * sin(phi) + Y * cos(phi)}. The \code{XYZ} directions for
 #' the 3-component seismogram must form a right-handed coordinate system.
-#' @return The rotated time series.
-#' @seealso \code{\link{ts}}, \code{\link{signalSeries}}
+#' @return The rotated time series, with the same object type as the input.
+#' @seealso \code{\link{ts}}, \code{\link{mts}}, and \code{\link{signalSeries}}.
 #' @examples
 #' deg2rad <- pi / 180
 #' # vector example
@@ -50,8 +54,6 @@
 #' rotateZ(xt.ss, phi=45*deg2rad, cnames=c("XR","YR","Z"))
 #'
 #' @keywords ts
-deg2rad <- pi / 180
-rad2deg <- 180 / pi
 
 #' @describeIn rotateZ.default rotates \code{vector} univariate
 #' time series, or a \code{matrix} multivariate time series.
@@ -194,10 +196,10 @@ rotateZ.signalSeries <- function(xt, yt, zt, phi, cnames=NA, dt=NA) {
     n.traces <- dim(xt)[2]
     if ( n.traces < 2 )
       stop("multi-trace time series must have at least 2 components")
-    X <- xt[,1]@data
-    Y <- xt[,2]@data
+    X <- xt@data[,1]
+    Y <- xt@data[,2]
     if ( n.traces >= 3 )
-      Z <- xt[,3]@data
+      Z <- xt@data[,3]
     cnames.def <- colnames(xt@data)
   } else {
     if ( missing(yt) )

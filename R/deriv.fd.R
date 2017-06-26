@@ -4,7 +4,9 @@
 #' \code{deriv_fd} is used to compute the derivative of a univariate or multivariate
 #' time series using the finite difference method.
 #'
-#' @param xt Equally-sampled input series. Must convert to numeric vector.
+#' @param xt Equally-sampled input time series, including a numeric \code{\link{vector}},
+#' \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}}, \code{\link{mts}}
+#' or \code{\link{signalSeries}}.
 #' @param dt Sample interval, in seconds. Default is 0.01 if input is not a
 #' \code{\link{ts}} or \code{\link{signalSeries}}.
 #' @param nd Integer order of the derivative. Currently only first and
@@ -15,6 +17,8 @@
 #' between 0 and 50. Default is 0.
 #' @return the derivative of the windowed data, with the same object type as
 #' the input.
+#' @seealso \code{\link{ts}}, \code{\link{mts}}, \code{\link{signalSeries}},
+#' and \code{\link{integ}}.
 #' @keywords ts
 #'
 
@@ -40,6 +44,7 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       else
         dxdt.mts <- data.frame(dxdt.mts,dxdt)
     }
+    colnames(dxdt.mts) <- colnames(xt)
     dxdt <- dxdt.mts
   } else {
     xt <- as.double(xt[!is.na(xt)])
@@ -76,10 +81,11 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
                     as.double(xt[ok,ii]), as.double(dt), as.integer(nd),
                     as.integer(order), as.double(pct))
       if ( is.null(dxdt.mts) )
-        dxdt.mts <- ts(dxdt, start = start, deltat = dt)
+        dxdt.mts <- data.frame(dxdt)
       else
-        dxdt.mts <- ts(data.frame(dxdt.mts, dxdt), start = start, deltat = dt)
+        dxdt.mts <- data.frame(dxdt.mts, dxdt)
     }
+    colnames(dxdt.mts) <- colnames(xt)
     dxdt <- dxdt.mts
   } else {
     xt <- as.double(xt[!is.na(xt)])
@@ -89,9 +95,8 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
     dxdt <- .Call("CALLfd_deriv",
                   xt, as.double(dt), as.integer(nd),
                   as.integer(order), as.double(pct))
-    dxdt <- ts(dxdt, start = start, deltat = dt)
   }
-  dimnames(dxdt) <- dimnames(xt)
+  dxdt <- ts(dxdt, start=start, deltat=dt)
 
   return(dxdt)
 }
@@ -109,6 +114,7 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   start <- xt@positions@from
 
   units <- xt@units
+  units.position <- xt@units.position
   if ( is.na(units) || is.null(units) ) {
     units.new <- NA
   } else {
@@ -138,15 +144,16 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       stop("input time series must have at least 3 valid points")
     dxdt.mts = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      ok <- ! is.na(xt[,ii]@data)
+      ok <- ! is.na(xt@data[,ii])
       dxdt <- .Call("CALLfd_deriv",
-                    as.double(xt[ok,ii]@data), as.double(dt), as.integer(nd),
+                    as.double(xt@data[ok,ii]), as.double(dt), as.integer(nd),
                     as.integer(order), as.double(pct))
-      if ( is.null(xt) )
-        dxdt.mts <- signalSeries(dxdt, from=start, by=dt, units=units.new)
+      if ( is.null(dxdt.mts) )
+        dxdt.mts <- data.frame(dxdt)
       else
-        dxdt.mts <- signalSeries(data.frame(dxdt.mts@data, dxdt@data), from=start, by=dt, units=units.new)
+        dxdt.mts <- data.frame(dxdt.mts, dxdt)
     }
+    colnames(dxdt.mts) <- colnames(xt@data)
     dxdt <- dxdt.mts
   } else {
     ok <- ! is.na(xt@data)
@@ -154,11 +161,11 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
-                  as.double(xt[ok]@data), as.double(dt), as.integer(nd),
+                  as.double(xt@data[ok]), as.double(dt), as.integer(nd),
                   as.integer(order), as.double(pct))
-    dxdt <- signalSeries(dxdt, from=start, by=dt, units=units.new)
   }
-  names(dxdt) <- names(xt)
+  dxdt <- signalSeries(dxdt, from=start, by=dt, units=units.new,
+                       units.position=units.position)
 
   return(dxdt)
 }
