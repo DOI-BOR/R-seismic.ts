@@ -11,11 +11,11 @@
 #' @param dt Sample interval, in seconds. Default is 0.01.
 #' @details This function may be used to determine the Hilbert transform, envelope
 #' function, instantaneous phase, or instantaneous frequency of an input
-#' time series.
+#' time series. It uses the analytic signal to determine the result.
 #' @return the transform of the data.
 #' @seealso \code{\link{analytic.ts}}, \code{\link{unwrap.phase}},
 #' \code{\link{zero.pad}}, \code{\link{hilbert}},
-#' \href{https://en.wikipedia.org/wiki/Analytic_signal}{Wikipedia}
+#' \href{https://en.wikipedia.org/wiki/Hilbert_transform}{Wikipedia}
 #' @keywords ts
 
 hilbert <- function(x.data, op = "hilbert", zero.pad = TRUE, dt = 0.01) {

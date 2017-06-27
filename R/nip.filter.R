@@ -194,25 +194,35 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     RY <- -R * sin(-pi/4) + T * cos(-pi/4)
     NIP.XY <- abs(Re(RX) * Re(RY) + Im(RX) * Im(RY)) / (Mod(RX) * Mod(RY))
 
-    # Construct filter from NIP.XY. Body and Love waves should have |NIP.XY| > 0.8
+    # Construct filter from NIP.XY. Linearly polarized waves in the
+    # horizontal plane should have |NIP.XY| > 0.8. Note that the horizontal
+    # components of Rayleigh motion will be linearly polarized in the XY plane,
+    # so this filter can be used to further discriminate Rayleigh waves
     v1 <- 0.7
     v2 <- 0.8
     nip.selector <- abs(NIP.XY)
-    F.XY <- cos.filter(nip.selector, v1, v2) # rejects linearly-polarized waves
+    # get filter to reject linearly-polarized waves in XY plane
+    F.XY <- cos.filter(nip.selector, v1, v2)
   }
 
   if ( reject ) {
     # get filter to reject Rayleigh waves
     if ( xy.filter ) {
-      F <- 1 - F.XY * F.RZH # further, select linearly-polarized waves
+      F <- 1 - F.RZH * (1 - F.XY)
+      # reject Rayleigh motion in the vertical plane coincident with
+      # linearly polarized motion in XY plane
     } else {
+      # reject Rayleigh motion in the vertical plane
       F <- 1 - F.RZH
     }
   } else {
     # get filter to select Rayleigh waves
     if ( xy.filter ) {
-      F <- F.RZH * F.XY # further, reject linearly-polarized waves
+      # select Rayleigh motion in the vertical plane coincident with
+      # linearly polarized motion in XY plane
+      F <- F.RZH * (1 - F.XY)
     } else {
+      # select Rayleigh motion in the vertical plane
       F <- F.RZH
     }
   }
