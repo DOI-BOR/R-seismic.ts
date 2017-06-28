@@ -66,7 +66,10 @@ function (x, y, ..., main = NULL, ylab = x@units[1], xlab = x@units.position,
 		}
 	}
 	title(main = main, cex.main = cex.main)
-	if ( is.vector(legend) || ! is.na(legend) ) {
+	if ( ! is.null(ns) && anyNA(legend) )
+	  legend <- colnames(x@data)
+
+	if ( ! is.null(legend) && ! anyNA(legend) ) {
 		if ( is.na(legend.pos) )
 			legend.pos <- "topleft"
 		legend(x=legend.pos, legend=legend, lty=leg.lty, col=leg.col,
