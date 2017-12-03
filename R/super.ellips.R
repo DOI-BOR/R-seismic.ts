@@ -20,7 +20,7 @@
 #' (IRE) is determined from \code{IRE = b/a}. Filters can be implemented using
 #' the elliptical elements or derived polarization attributes to select or reject
 #' certain wave types (e.g., see \code{\link{rayleigh.filter}}).
-#' @return A \code{link{list}} is returned with the following elliptical elements
+#' @return A \code{\link{list}} is returned with the following elliptical elements
 #' for each input point:
 #' \describe{
 #' \item{\code{a}}{Semi-major axis of the ellipse. \code{a >= 0}}
@@ -36,7 +36,7 @@
 #' Each element has the same class as the input, unless the \code{nrow} and
 #' \code{ncol} arguments are provided, in which case the returned elements will
 #' be of class \code{link{matrix}}.
-#' @seealso \code{\link{rayleigh.filter}}, \code{\link{analytic.ts}}, \code{\pkg{ngft}},
+#' @seealso \code{\link{rayleigh.filter}}, \code{\link{analytic.ts}}, \pkg{\link{ngft}},
 #' \code{\link{pca}}, \code{\link{ipa}}
 #'
 #' \itemize{

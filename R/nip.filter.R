@@ -24,7 +24,8 @@
 #' in the \code{+X} direction and prograde motion in the \code{-X} direction. Default
 #' is \code{TRUE}.
 #' @param xy.filter If \code{TRUE}, also apply a NIP filter for linearly-polarized
-#' motion in the \code{X-Y} plane. Default is \code{TRUE}.
+#' motion in the \code{X-Y} plane, where \code{X} and \code{Y} are rotated
+#' 45 degrees from the \code{R} and \code{T} axes. Default is \code{FALSE}.
 #' @param posf.start,negf.start Index into \code{X}, \code{Y}, and \code{Z} of
 #' the starting index for positive and negative frequencies. Only needed for
 #' S-transforms that are NOT in standard (rectangular) form, such as fast S-transforms.
@@ -74,7 +75,7 @@
 #' @keywords ts
 
 nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
-                       xy.filter=TRUE, posf.start=NA, negf.start=NA) {
+                       xy.filter=FALSE, posf.start=NA, negf.start=NA) {
   if ( missing(X) || missing(Y) || missing(Z) )
     stop("Must provide input X, Y, and Z")
   if ( ! is.complex(X) || ! is.complex(Y) || ! is.complex(Z) )
@@ -201,34 +202,22 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     # the T direction. We want motion polarized in the R direction for Rayleigh
     # waves, so select NIP.XY > 0.8. TODO: try using NIP.XY < -0.8 to select
     # SH and Love waves
-    v1 <- 0.8
-    v2 <- 0.7
+    v1 <- 0.6
+    v2 <- 0.4
     nip.selector <- NIP.XY
     # get filter to select linearly-polarized waves in XY plane, +R direction
     F.XY <- cos.filter(nip.selector, v1, v2)
   }
 
-  if ( reject ) {
-    # get filter to reject Rayleigh waves
-    if ( xy.filter ) {
-      F <- 1 - F.RZH * F.XY
-      # reject Rayleigh motion in the vertical plane coincident with
-      # linearly polarized motion in XY plane
-    } else {
-      # reject Rayleigh motion in the vertical plane
-      F <- 1 - F.RZH
-    }
-  } else {
-    # get filter to select Rayleigh waves
-    if ( xy.filter ) {
-      # select Rayleigh motion in the vertical plane coincident with
-      # linearly polarized motion in XY plane
-      F <- F.RZH * F.XY
-    } else {
-      # select Rayleigh motion in the vertical plane
-      F <- F.RZH
-    }
-  }
+  # select Rayleigh waves
+  F <- F.RZH
+  # if requested, also select linearly-polarized waves in X-Y plane,
+  # in the +R direction
+  if ( xy.filter )
+    F <- F * F.XY
+  # if requested, get filter to reject Rayleigh waves
+  if ( reject )
+    F <- 1 - F
 
     # convert outputs to matrices, if inputs were matrices
   if ( matrix.in ) {
@@ -237,22 +226,25 @@ nip.filter <- function(X, Y, Z, nf=NA, reject=TRUE, motion="all", plus.x=TRUE,
     F <- t(F)
     dim(NIP.RZH) <- dimtf
     NIP.RZH <- t(NIP.RZH)
-    if ( xy.filter ) {
-      dim(F.XY) <- dimtf
-      F.XY <- t(F.XY)
-      dim(NIP.XY) <- dimtf
-      NIP.XY <- t(NIP.XY)
-    }
     dim(ZH) <- dimtf
     ZH <- t(ZH)
     dim(phi) <- dimtf
     phi <- t(phi)
     dim(rho) <- dimtf
     rho <- t(rho)
+    if ( xy.filter ) {
+      dim(F.XY) <- dimtf
+      F.XY <- t(F.XY)
+      dim(NIP.XY) <- dimtf
+      NIP.XY <- t(NIP.XY)
+    }
   }
 
   #----- return list of values
-  ret = list(F=F, nip=NIP.RZH, nip.xy=NIP.XY, ZH=ZH, phi=phi, rho=rho)
+  if ( xy.filter )
+    ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho, nip.xy=NIP.XY)
+  else
+    ret = list(F=F, nip=NIP.RZH, ZH=ZH, phi=phi, rho=rho)
 
   return(ret)
 }

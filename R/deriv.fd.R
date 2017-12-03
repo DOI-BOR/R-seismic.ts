@@ -1,6 +1,5 @@
 #' Finite Difference Derivative of a Multivariate Time Series
 #'
-#' @description
 #' \code{deriv_fd} is used to compute the derivative of a univariate or multivariate
 #' time series using the finite difference method.
 #'
@@ -14,7 +13,7 @@
 #' @param order Integer order of the finite difference. Currently only
 #' orders of 2, 4, 6, and 8 are supported. Default is 8.
 #' @param pct Percentage of data window to apply a Hanning taper. Must be
-#' between 0 and 50. Default is 0.
+#' between 0 and 50. Default is 0.5 percent.
 #' @return the derivative of the windowed data, with the same object type as
 #' the input.
 #' @seealso \code{\link{ts}}, \code{\link{mts}}, \code{\link{signalSeries}},
@@ -23,7 +22,7 @@
 #'
 
 #' @describeIn deriv_fd.default differentiates a numeric \code{vector} or \code{matrix}.
-deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
+deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
   if ( is.na(dt) )
     dt <- 0.01
@@ -38,7 +37,7 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       ok <- ! is.na(xt[,ii])
       dxdt <- .Call("CALLfd_deriv",
                    as.double(xt[ok,ii]), as.double(dt), as.integer(nd),
-                   as.integer(order), as.double(pct))
+                   as.integer(order))
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -53,15 +52,17 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   		stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
   							 xt, as.double(dt), as.integer(nd),
-  							 as.integer(order), as.double(pct))
- }
+  							 as.integer(order))
+  }
+  if ( is.finite(pct) && pct > 0 )
+    dxdt <- hanning(dxdt,pct)
 
-	return(dxdt)
+  return(dxdt)
 }
 setGeneric("deriv_fd",def=deriv_fd.default)
 
 #' @describeIn deriv_fd.default differentiates a \code{ts} or \code{mts} object.
-deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
+deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
   multi.trace <- is.mts(xt)
@@ -79,7 +80,7 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       ok <- ! is.na(xt[,ii])
       dxdt <- .Call("CALLfd_deriv",
                     as.double(xt[ok,ii]), as.double(dt), as.integer(nd),
-                    as.integer(order), as.double(pct))
+                    as.integer(order))
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -94,8 +95,10 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
                   xt, as.double(dt), as.integer(nd),
-                  as.integer(order), as.double(pct))
+                  as.integer(order))
   }
+  if ( is.finite(pct) && pct > 0 )
+    dxdt <- hanning(dxdt,pct)
   dxdt <- ts(dxdt, start=start, deltat=dt)
 
   return(dxdt)
@@ -103,7 +106,7 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
 setMethod("deriv_fd","ts",deriv_fd.ts)
 
 #' @describeIn deriv_fd.default differentiates a \code{signalSeries} object.
-deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
+deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
   multi.trace <- ! is.null(dim(xt))
@@ -147,7 +150,7 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       ok <- ! is.na(xt@data[,ii])
       dxdt <- .Call("CALLfd_deriv",
                     as.double(xt@data[ok,ii]), as.double(dt), as.integer(nd),
-                    as.integer(order), as.double(pct))
+                    as.integer(order))
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -162,8 +165,10 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
                   as.double(xt@data[ok]), as.double(dt), as.integer(nd),
-                  as.integer(order), as.double(pct))
+                  as.integer(order))
   }
+  if ( is.finite(pct) && pct > 0 )
+    dxdt <- hanning(dxdt,pct)
   dxdt <- signalSeries(dxdt, from=start, by=dt, units=units.new,
                        units.position=units.position)
 

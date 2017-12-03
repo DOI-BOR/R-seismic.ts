@@ -1,8 +1,8 @@
 Package: seismic.ts
 Type: Package
 Title: Time Series Utilities for Seismic Signals
-Version: 0.2.17
-Date: 2017-06-28
+Version: 0.2.18
+Date: 2017-11-20
 Author: Chris Wood
 Maintainer: Chris Wood <cwood@usbr.gov>
 Description: Utilities for handling seismic time series, including
@@ -13,6 +13,8 @@ LazyData: true
 Depends:
     R (>= 3.0.0),
     splus2R,
+    RSEIS,
+    fftw,
     ltsa
 NeedsCompilation: yes
 KeepSource: true
