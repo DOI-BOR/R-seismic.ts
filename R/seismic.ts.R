@@ -13,16 +13,22 @@
 
 # .onLoad is called by loadNamespace, usually via library()
 .onLoad <- function(libname, pkgname) {
-  # message(".onLoad: libname=",libname,", pkgname=", pkgname)
-  # don't load ngft if useDynLib directive is used in NAMESPACE file
+  #message(".onLoad: libname=",libname,", pkgname=", pkgname)
+  # load fft3, unless it's already loaded
+  fft_dll <- "libfftw3-3"
   # library.dynam("seismic.ts", pkgname, libname)
-  library.dynam("libfftw3-3", pkgname, libname)
+  dlls <- getLoadedDLLs()
+  dll_list <- NULL
+  for ( ii in 1:length(dlls) )
+    dll_list <- c(dll_list, dlls[[ii]][["name"]])
+  if ( ! fft_dll %in% dll_list )
+    library.dynam(fft_dll, pkgname, lib.loc=libname)
 }
 
 # .onAttach is called by attachNamespace, usually via library()
 .onAttach <- function(libname, pkgname) {
   # lib.loc <- file.path(libname,pkgname,"libs",.Platform$r_arch)
-  # message(".onAttach: libname=",libname,", pkgname=", pkgname)
+  #message(".onAttach: libname=",libname,", pkgname=", pkgname)
 }
 
 # .onUnLoad is called by unloadNamespace, usually via detach()
