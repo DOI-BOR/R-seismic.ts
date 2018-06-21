@@ -1,5 +1,5 @@
 # keep this comment line to avoid roxygen issues
-# load libfftw3 before seismic.ts. Do we also need in .onLoad?
+# load libfftw3 before seismic.ts.
 useDynLib("libfftw3-3")
 # load seismic.ts
 useDynLib(seismic.ts, .registration = TRUE)
