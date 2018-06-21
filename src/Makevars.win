@@ -19,5 +19,6 @@ all: fftw $(SHLIB)
 #all: $(SHLIB)
 
 fftw:
+	@mkdir -p $(LIB_PATH)
 	@cp $(LIB_FFTW_DLL) $(LIB_PATH)
 	@cp $(LIB_FFTW_DLL) .
