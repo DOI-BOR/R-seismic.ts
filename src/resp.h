@@ -5,7 +5,6 @@
 # include "fftw3.h"
 #endif
 #include "ts.h"
-#include "ts_proto.h"
 
 /* enum defining implemented methods to compute response spectrum */
 typedef enum {
@@ -24,3 +23,11 @@ typedef struct dcmplx {
 	double i;	/* imaginary part */
 } DCMPLX;
 #endif
+
+#ifdef __RESP_SRC
+# ifdef DllImport
+#  undef DllImport
+#  define DllImport DllExport
+# endif
+#endif
+#include "resp_proto.h"

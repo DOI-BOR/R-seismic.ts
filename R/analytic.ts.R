@@ -4,7 +4,7 @@
 #' \code{analytic.ts} computes the analytic signal for a real,
 #' univariate or multivariate time series.
 #'
-#' @param x.data Equally-sampled univariate or multivariate series. Supported
+#' @param xt Equally-sampled univariate or multivariate series. Supported
 #' types include a numeric \code{\link{vector}}, \code{\link{matrix}},
 #' \code{\link{data.frame}}, \code{\link{ts}}, or \code{\link{signalSeries}}.
 #' @details The analytic signal s(t) of a function f(t) is defined

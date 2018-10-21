@@ -65,7 +65,7 @@
 #' \item{rho}{another estimate of theta. The radial direction depends on frequency
 #' and time.}
 #' }
-#' @seealso \code{\pkg{ngft}}, \code{\link{rayleigh.filter}}
+#' @seealso \pkg{ngft}, \code{\link{rayleigh.filter}}
 #' \itemize{
 #' \item \href{https://en.wikipedia.org/wiki/S_transform}{S-Transform (Wikipedia)}
 #' \item \href{http://www.bssaonline.org/content/105/1/210.abstract}{Meza-Fajardo et al (2015)}

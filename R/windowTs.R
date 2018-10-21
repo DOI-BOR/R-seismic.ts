@@ -44,7 +44,8 @@ windowTs.default <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
 	    wt <- .Call("CALLwindow_ts",
 	                as.double(xt[ok,ii]), as.double(dt), as.double(t0),
 	                as.double(tw), as.logical(demean), as.double(pct),
-	                as.character(type), as.logical(norm))
+	                as.character(type), as.logical(norm),
+	                PACKAGE="seismic.ts")
 	    if ( is.null(wt.mts) )
 	      wt.mts <- data.frame(wt)
 	    else
@@ -60,7 +61,8 @@ windowTs.default <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
 	  wt <- .Call("CALLwindow_ts",
 	              xt, as.double(dt), as.double(t0),
 	              as.double(tw), as.logical(demean), as.double(pct),
-	              as.character(type), as.logical(norm))
+	              as.character(type), as.logical(norm),
+	              PACKAGE="seismic.ts")
 	}
 
 	return(wt)
@@ -86,7 +88,8 @@ windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
       wt <- .Call("CALLwindow_ts",
                   as.double(xt[ok,ii]), as.double(dt), as.double(t0),
                   as.double(tw), as.logical(demean), as.double(pct),
-                  as.character(type), as.logical(norm))
+                  as.character(type), as.logical(norm),
+                  PACKAGE="seismic.ts")
       if ( is.null(wt.mts) )
         wt.mts <- data.frame(wt)
       else
@@ -102,7 +105,8 @@ windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
     wt <- .Call("CALLwindow_ts",
                 xt, as.double(dt), as.double(t0),
                 as.double(tw), as.logical(demean), as.double(pct),
-                as.character(type), as.logical(norm))
+                as.character(type), as.logical(norm),
+                PACKAGE="seismic.ts")
   }
   wt <- ts(wt, start=start, deltat=dt)
 
@@ -132,7 +136,8 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
       wt <- .Call("CALLwindow_ts",
                   as.double(xt@data[ok,ii]), as.double(dt), as.double(t0),
                   as.double(tw), as.logical(demean), as.double(pct),
-                  as.character(type), as.logical(norm))
+                  as.character(type), as.logical(norm),
+                  PACKAGE="seismic.ts")
       if ( is.null(wt.mts) )
         wt.mts <- data.frame(wt)
       else
@@ -148,7 +153,8 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
     wt <- .Call("CALLwindow_ts",
                 as.double(xt@data[ok]), as.double(dt), as.double(t0),
                 as.double(tw), as.logical(demean), as.double(pct),
-                as.character(type), as.logical(norm))
+                as.character(type), as.logical(norm),
+                PACKAGE="seismic.ts")
   }
   wt <- signalSeries(wt, from=start, by=dt, units=units, units.position=units.position)
 

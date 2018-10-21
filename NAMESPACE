@@ -2,7 +2,9 @@
 # load libfftw3 before seismic.ts.
 useDynLib("libfftw3-3")
 # load seismic.ts
-useDynLib(seismic.ts, .registration = TRUE)
+useDynLib(seismic.ts, .registration=TRUE)
+# useDynLib(seismic.ts, CALLfd_deriv, CALLfilter_ts, CALLhilbertr_fir, CALLresp, CALLwindow_ts)
 importFrom("stats", "acf", "fft", "filter", "is.mts", "toeplitz", "ts")
+# importFrom("ilsd", "RSEIS", "fftw", "ltsa", "splus2R")
 #exportPattern("^[[:alpha:]]+")
 exportPattern("^[^\\.]")

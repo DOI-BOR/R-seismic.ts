@@ -1,10 +1,10 @@
-#include "ts.h"
+#include "common.h"
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
 
-#ifdef DllImport
-#  undef DllImport
-#  define DllImport DllExport
-# endif
-#include "ts_proto.h"
+#define __TS_SRC
+#include "ts.h"
 
 /*
    Package for general recursion filtering; taken from SAC recursion
@@ -12,7 +12,7 @@
    Livermore National Laboratory);  Converted to C then cleaned
    up with some modification by Bob Crosson, 5/91.  Copyright notice
    from original code follows:
-   
+
 	Copyright 1990  Regents of the University of California
 	Author:  Dave Harris
 		Lawrence Livermore National Laboratory
@@ -39,7 +39,7 @@
   design(iord, type, aproto, a, trbndw, fl, fh, ts)
 
 	int iord:      number of poles for filter (< 10; preferably < 5)
-	PassBandType *type:   
+	PassBandType *type:
 				"LP" for low pass (SAC default = LP)
 				"HP" for high pass
 				"BP" for band pass
@@ -223,7 +223,7 @@ DllExport void design(
 	complex p[10], z[10];
 	char stype[3*10];
 	double omegar, ripple;
-	double fhw, eps, flw, dcvalue;
+	double fhw, eps, flw, dcvalue = 0;
 
 	/* null any previous filter coefficients */
 	memset( sn, 0, sizeof(sn) );
@@ -488,12 +488,12 @@ static int c1roots(
 /*                     PASSBAND CUTOFF IS AT 1.0 HERTZ */
 
 static int c2roots(
-		complex *p, 
+		complex *p,
 		complex *z,
 		char *rtype,
 		double *dcvalue,
 		int iord,
-		double a, 
+		double a,
 		double omegar)
 {
 	/* System generated locals */
@@ -668,26 +668,26 @@ static int lptbp(
 			q__1.r = q__2.r * .5, q__1.i = q__2.i * .5;
 			p2.r = q__1.r, p2.i = q__1.i;
 			q__2 = conjg(z1);
-			q__1.r = z1.r * q__2.r - z1.i * q__2.i, q__1.i = z1.r * q__2.i + 
+			q__1.r = z1.r * q__2.r - z1.i * q__2.i, q__1.i = z1.r * q__2.i +
 			z1.i * q__2.r;
 			sn[iptr] = q__1.r;
 			sn[iptr + 1] = z1.r * -2.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p1);
-			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i + 
+			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i +
 			p1.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p1.r * -2.;
 			sd[iptr + 2] = 1.;
 			iptr += 3;
 			q__2 = conjg(z2);
-			q__1.r = z2.r * q__2.r - z2.i * q__2.i, q__1.i = z2.r * q__2.i + 
+			q__1.r = z2.r * q__2.r - z2.i * q__2.i, q__1.i = z2.r * q__2.i +
 			z2.i * q__2.r;
 			sn[iptr] = q__1.r;
 			sn[iptr + 1] = z2.r * -2.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p2);
-			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i + 
+			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i +
 			p2.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p2.r * -2.;
@@ -717,7 +717,7 @@ static int lptbp(
 			sn[iptr + 1] = b;
 			sn[iptr + 2] = 0.;
 			q__2 = conjg(p1);
-			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i + 
+			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i +
 			p1.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p1.r * -2.;
@@ -727,7 +727,7 @@ static int lptbp(
 			sn[iptr + 1] = b;
 			sn[iptr + 2] = 0.;
 			q__2 = conjg(p2);
-			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i + 
+			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i +
 			p2.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p2.r * -2.;
@@ -764,7 +764,7 @@ static int lptbp(
 		s.r;
 		i__4 = iptr;
 		q__3.r = q__4.r + sn[i__4], q__3.i = q__4.i;
-		q__2.r = h.r * q__3.r - h.i * q__3.i, q__2.i = h.r * q__3.i + h.i * 
+		q__2.r = h.r * q__3.r - h.i * q__3.i, q__2.i = h.r * q__3.i + h.i *
 		q__3.r;
 		i__5 = iptr + 2;
 		q__10.r = sd[i__5] * s.r, q__10.i = sd[i__5] * s.i;
@@ -1003,26 +1003,26 @@ static int lptbr(
 			q__1.r = q__2.r * .5, q__1.i = q__2.i * .5;
 			p2.r = q__1.r, p2.i = q__1.i;
 			q__2 = conjg(z1);
-			q__1.r = z1.r * q__2.r - z1.i * q__2.i, q__1.i = z1.r * q__2.i + 
+			q__1.r = z1.r * q__2.r - z1.i * q__2.i, q__1.i = z1.r * q__2.i +
 			z1.i * q__2.r;
 			sn[iptr] = q__1.r;
 			sn[iptr + 1] = z1.r * -2.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p1);
-			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i + 
+			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i +
 			p1.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p1.r * -2.;
 			sd[iptr + 2] = 1.;
 			iptr += 3;
 			q__2 = conjg(z2);
-			q__1.r = z2.r * q__2.r - z2.i * q__2.i, q__1.i = z2.r * q__2.i + 
+			q__1.r = z2.r * q__2.r - z2.i * q__2.i, q__1.i = z2.r * q__2.i +
 			z2.i * q__2.r;
 			sn[iptr] = q__1.r;
 			sn[iptr + 1] = z2.r * -2.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p2);
-			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i + 
+			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i +
 			p2.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p2.r * -2.;
@@ -1051,7 +1051,7 @@ static int lptbr(
 			sn[iptr + 1] = 0.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p1);
-			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i + 
+			q__1.r = p1.r * q__2.r - p1.i * q__2.i, q__1.i = p1.r * q__2.i +
 			p1.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p1.r * -2.;
@@ -1061,7 +1061,7 @@ static int lptbr(
 			sn[iptr + 1] = 0.;
 			sn[iptr + 2] = 1.;
 			q__2 = conjg(p2);
-			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i + 
+			q__1.r = p2.r * q__2.r - p2.i * q__2.i, q__1.i = p2.r * q__2.i +
 			p2.i * q__2.r;
 			sd[iptr] = q__1.r;
 			sd[iptr + 1] = p2.r * -2.;

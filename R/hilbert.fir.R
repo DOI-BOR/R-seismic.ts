@@ -23,6 +23,8 @@ hilbert.fir <- function(xt, zero.pad = TRUE, dt = 0.01) {
 		stop("input time series must have at least 3 valid points")
 
 	# call C function
-	out <- .Call("CALLhilbertr_fir", as.double(x), as.double(dt))
+	out <- .Call("CALLhilbertr_fir",
+	             as.double(x), as.double(dt),
+	             PACKAGE="seismic.ts")
 	return(out)
 }

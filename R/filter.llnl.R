@@ -85,7 +85,8 @@ filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
 	    ft <- .Call("CALLfilter_ts",
 	                 as.double(xt[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
 	                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
-	                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+	                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+	                 PACKAGE="seismic.ts")
 	    if ( is.null(dxdt.mts) )
 	      ft.mts <- data.frame(ft)
 	    else
@@ -101,7 +102,8 @@ filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
 	  ft <- .Call("CALLfilter_ts",
 	              xt, as.double(dt), as.integer(order), as.character(pb.type),
 	              as.character(filt.type), as.double(f.lo), as.double(f.hi),
-	              as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+	              as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+	              PACKAGE="seismic.ts")
 	}
 
 	return(ft)
@@ -135,7 +137,8 @@ filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
       ft <- .Call("CALLfilter_ts",
                   as.double(xt[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
-                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+                  PACKAGE="seismic.ts")
       if ( is.null(ft.mts) )
         ft.mts <- data.frame(ft)
       else
@@ -151,7 +154,8 @@ filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
     ft <- .Call("CALLfilter_ts",
                 xt, as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
-                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+                PACKAGE="seismic.ts")
   }
   ft <- ts(ft, start=start, deltat=dt)
 
@@ -187,7 +191,8 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
       ft <- .Call("CALLfilter_ts",
                   as.double(xt[ok,ii]@data), as.double(dt), as.integer(order), as.character(pb.type),
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
-                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+                  as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+                  PACKAGE="seismic.ts")
       if ( is.null(ft.mts) )
         ft.mts <- data.frame(ft)
       else
@@ -203,7 +208,8 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
     ft <- .Call("CALLfilter_ts",
                 as.double(xt[ok]@data), as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
-                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw))
+                as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
+                PACKAGE="seismic.ts")
   }
   names(ft) <- names(xt)
   ft <- signalSeries(ft, from=start, by=dt, units=units, units.position=units.position)

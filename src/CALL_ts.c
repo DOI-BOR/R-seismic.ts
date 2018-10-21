@@ -40,8 +40,8 @@ DllExport SEXP CALLfd_deriv(SEXP ts_d, SEXP dt_d, SEXP nd_i, SEXP order_i)
 }
 
 DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d,
-                             SEXP demean_i, SEXP ptap_d, SEXP type_s,
-                             SEXP do_norm_i)
+                             SEXP demean_l, SEXP ptap_d, SEXP type_s,
+                             SEXP do_norm_l)
 {
 	int ii, pcnt = 0, win_len;
 	double *wts = NULL, *wtp;
@@ -50,9 +50,9 @@ DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d,
 	double *ts = REAL(ts_d);
 	int len = length(ts_d);
 	double dt = ! R_FINITE(asReal(dt_d)) ? .005 : REAL(dt_d)[0];
-	double t0 = ! R_FINITE(asReal(dt_d)) ? 0 : REAL(t0_d)[0];
-	double tw = ! R_FINITE(asReal(dt_d)) ? len * dt - t0 : REAL(tw_d)[0];
-	BOOL demean = asLogical(demean_i) == NA_LOGICAL ? FALSE : LOGICAL(demean_i)[0];
+	double t0 = ! R_FINITE(asReal(t0_d)) ? 0 : REAL(t0_d)[0];
+	double tw = ! R_FINITE(asReal(tw_d)) ? len * dt - t0 : REAL(tw_d)[0];
+	BOOL demean = asLogical(demean_l) == NA_LOGICAL ? FALSE : LOGICAL(demean_l)[0];
 	double ptap = ! R_FINITE(asReal(ptap_d)) ? 0 : REAL(ptap_d)[0];
 	TaperType type = asChar(type_s) == NA_STRING ? TW_HANNING : /* if not set, use Hanning */
 			strncasecmp(CHAR(STRING_ELT(type_s,0)), "ba", 2) == 0 ? TW_BARTLETT : /* Bartlett */
@@ -61,7 +61,7 @@ DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d,
 			strncasecmp(CHAR(STRING_ELT(type_s,0)), "bl", 2) == 0 ? TW_BLACKMANN_HARRIS : /* Blackmann-Harris */
 			strncasecmp(CHAR(STRING_ELT(type_s,0)), "e", 1) == 0 ? TW_EXACT_BLACKMANN : /* Exact Blackmann */
 			TW_HANNING; /* silently ignore anything else, and use Hanning */
-	BOOL do_norm = asLogical(do_norm_i) == NA_LOGICAL ? FALSE : LOGICAL(do_norm_i)[0];
+	BOOL do_norm = asLogical(do_norm_l) == NA_LOGICAL ? FALSE : LOGICAL(do_norm_l)[0];
 
 	if ( len < 3 )
 		error("time series must have at least 3 points");

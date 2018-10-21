@@ -7,6 +7,7 @@
 #'
 #' @param x Equally-sampled univariate time series. Must convert to a numeric vector.
 #' @param filt Equally-sampled univariate filter series. Must convert to a numeric vector.
+#' @param truncate If true, truncate output to input data length (def. FALSE).
 #' @return The filtered time series.
 #' @seealso \code{\link{filter}}
 #' @keywords ts

@@ -20,7 +20,7 @@
 #' @return List containing the cumulative sum, and the integrated time series
 #' (which has the same object type as the input).
 #' @seealso \code{\link{ts}}, \code{\link{mts}}, \code{\link{signalSeries}},
-#' \code{\link{deltat}}, \code{\link{cumsum}}, and \code{\link{deriv.fd}}.
+#' \code{\link{deltat}}, \code{\link{cumsum}}, and \code{\link{deriv.fd.default}}.
 #' @keywords ts
 #'
 

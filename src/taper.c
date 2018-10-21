@@ -4,13 +4,13 @@
 	Denver, CO
 */
 
-#include "ts.h"
+#include "common.h"
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
 
-#ifdef DllImport
-#  undef DllImport
-#  define DllImport DllExport
-# endif
-#include "ts_proto.h"
+#define __TS_SRC
+#include "ts.h"
 
 /* Mk_taper - construct various time-domain tapers
 	Arguments:
@@ -136,14 +136,19 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 									int *wlen)
 {
 	int winlen, start;
-	double *wt, *xr;
-	CMPLX *xc;
+	double *wt = NULL, *xr = NULL;
+	CMPLX *xc = NULL;
 
 	/* define window start and length  */
 	if ( dt <= 0. )
 		dt = 1.;	/* dt is positive */
 	t0 = MAX(t0,0.);	/* t0 is non-negative */
 	start = MIN(ROUND(t0 / dt),len-1);
+	if ( tw <= 0. ) {
+	  sprintf(msgbuf,"Warning: tw (%.3f) is not positive. Setting to max",tw);
+	  smsg("window_ts",msgbuf);
+	  tw = len * dt;
+	}
 	winlen = ROUND(tw / dt);
 	if ( start + winlen > len ) {
 		winlen = len - start;
@@ -152,12 +157,18 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 
 	/* get space for the window, and copy data from the input buffer */
 	if ( is_cmplx ) {
-		if ( (xc = calloc(winlen, sizeof(*xc))) == NULL )
-			oops("window_ts","can't get space for time series");
+		if ( (xc = calloc(winlen, sizeof(*xc))) == NULL ) {
+		  sprintf(msgbuf, "can't get space for complex time series (%d pts)\n\t%s",
+            winlen, strerror(errno));
+		  oops("window_ts", msgbuf);
+		}
 		memcpy(xc, (CMPLX *)buf + start, winlen * sizeof(*xc));
 	} else {
-		if ( (xr = calloc(winlen, sizeof(*xr))) == NULL )
-			oops("window_ts","can't get space for time series");
+		if ( (xr = calloc(winlen, sizeof(*xr))) == NULL ) {
+		  sprintf(msgbuf, "can't get space for time series (%d pts)\n\t%s",
+            winlen, strerror(errno));
+		  oops("window_ts", msgbuf);
+		}
 		memcpy(xr, (double *)buf + start, winlen * sizeof(*xr));
 	}
 	*wlen = winlen;
@@ -185,7 +196,7 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 
 	if ( ptap > 0 ) {
 		/* apply a taper to points within window */
-		int ii, jj, kk;
+		int ii, kk;
 		int whlen;
 		double norm_wt;
 		/* get taper weights */

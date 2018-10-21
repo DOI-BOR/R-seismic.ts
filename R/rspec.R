@@ -51,6 +51,7 @@ rspec <- function(ts, dt=0.01, ts.type="vel", rs.type="acc", ptap=NA,
 			as.character(ts.type), as.character(rs.type),
 			as.double(ts), as.double(dt), as.double(ptap), as.double(damp),
 			as.double(tau.range), as.double(periods),
-			as.integer(rs.meth), as.double(tau.si.range))
+			as.integer(rs.meth), as.double(tau.si.range),
+			PACKAGE="seismic.ts")
 	return(out)
 }

@@ -4,16 +4,16 @@ U.S. Bureau of Reclamation
 Denver, CO
 */
 
+#include "common.h"
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
+
+#define __TS_SRC
 #include "ts.h"
 
-#ifdef DllImport
-#  undef DllImport
-#  define DllImport DllExport
-# endif
-#include "ts_proto.h"
-
 static double *sphilb(int *);
-static void spmask(double *, int, int, double *); 
+static void spmask(double *, int, int, double *);
 static double spwndo(int, int, int);
 static void spfilt(double *, double *, int, int, double *, int);
 
@@ -28,21 +28,21 @@ DllExport double *hilbertr_fir(double *ts, int len)
 	double *hfir = NULL;
 	int hlen = HLEN;
 
-	/* get FIR coefficients.  If hlen is even, hlen -> hlen + 1 */	
+	/* get FIR coefficients.  If hlen is even, hlen -> hlen + 1 */
 	if ( (hfir = sphilb(&hlen)) == NULL )
 		oops("hilbertr", "can't get FIR coefficients");
-	
-	/* get work space for transform */	
+
+	/* get work space for transform */
 	if ( (work = calloc(len + hlen, sizeof(*work))) == NULL)
 		oops("hilbertr", "can't get work space");
 
 	/* copy x to work space */
 	memcpy(work, ts, len * sizeof(*ts));
-	
+
 	/* filter */
 	spfilt(hfir, NULL ,hlen, 0, work, len + hlen);
 
-	/* get space for transform */	
+	/* get space for transform */
 	if ( (h = calloc(len, sizeof(*h))) == NULL ) {
 		free(work);
 		oops("hilbertr", "can't get space for transform");
@@ -53,8 +53,8 @@ DllExport double *hilbertr_fir(double *ts, int len)
 	memcpy(h, work, len * sizeof(*work));
 
 	free(work);
-	
-	return h;	
+
+	return h;
 }
 
 /* SPHILB - adapted from Stearns and David, Signal Processing Algorithms
@@ -64,7 +64,7 @@ DllExport double *hilbertr_fir(double *ts, int len)
  * when used as a causal filter, the transformer has approximately
  *   unit gain, a group delay of (l-1)/2 samples, plus
  *   approximately 90 degrees phase shift at all frequencies.
- * 
+ *
  */
 static double *sphilb(int *lx)
 {
@@ -72,10 +72,10 @@ static double *sphilb(int *lx)
 	double tsv, *x;
 
 	if ( *lx % 2 == 0 )
-		*lx += 1;	
+		*lx += 1;
 	if ( (x = calloc( *lx, sizeof( *x ) )) == NULL )
 		oops("sphilb", "can't get space\n");
-	
+
 	l2 = *lx / 2;
 	x[l2] = 0.;
 	for ( k = 1 ; k <= l2 ; k++ ) {
@@ -94,7 +94,7 @@ static double *sphilb(int *lx)
  * lx = length of x = ix + 1
  * tsv= sum of squared window values.
  */
-static void spmask(double *x, int lx, int itype, double *tsv) 
+static void spmask(double *x, int lx, int itype, double *tsv)
 {
 	int k;
 	double w;

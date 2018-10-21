@@ -9,7 +9,7 @@
 #' representing one of the following types: (1) analytic signal; (2) Fourier transform;
 #' or, (3) S transform. The inputs must be of the same type and length. Input class
 #' can be \code{\link{ts}}, \code{\link{vector}}, or \code{\link{matrix}}.
-#' @param nrow,ncol If specified, and \code{X, Y} and \code{Z} are of class
+#' @param nr,nc If specified, and \code{X, Y} and \code{Z} are of class
 #' \code{\link{matrix}}, then convert the ouput elliptical attributes to matrix
 #' form, with \code{\link{dim} = c(nrow,ncol)}, and filled by row. Otherwise, the
 #' outputs will have the same class as the inputs.

@@ -15,7 +15,7 @@
 #' @details For factor > 1, this code augments by zero-padding the Fourier
 #' transform of the input series at frequencies greater than the Nyquist,
 #' and then taking the inverse transform.
-#' @seealso \code{\link{windowTs}}
+#' @seealso \code{\link{windowTs.default}}
 #' @keywords ts
 
 hanning <- function(x.data, pct = NA, demean = NA) {

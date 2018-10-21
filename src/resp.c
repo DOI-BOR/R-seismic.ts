@@ -4,13 +4,13 @@
 			Denver, CO
 */
 
-#include "resp.h"
+#include "common.h"
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
 
-#ifdef DllImport
-#  undef DllImport
-#  define DllImport DllExport
-# endif
-#include "resp_proto.h"
+#define __RESP_SRC
+#include "resp.h"
 
 #define DEF_DAMPING	0.05
 
@@ -24,8 +24,8 @@ static double taumax[] = 	{ .05,  0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10., -1. };
 #define SP_EPS	1.1e-16	/* infimum of single-precision delta */
 static int getper(double **periods, double taulo, double tauhi)
 {
-	int ii, jj, kk = 0, nn;
-	double *tau = NULL, dt, t, otaumax = 0;
+	int ii, kk = 0;
+	double *tau = NULL, t, otaumax = 0;
 
 	if ( periods == NULL )
 		oops("getper","periods pointer is NULL");
@@ -43,8 +43,9 @@ static int getper(double **periods, double taulo, double tauhi)
 		tau[kk-1] = t;
 	}
 	for ( ii = 0 ; taumax[ii] > 0. ; ii++ ) {
-		dt = dtau[ii];
-		nn = ROUND((taumax[ii] - otaumax) / dt);
+	  int jj;
+		double dt = dtau[ii];
+		int nn = ROUND((taumax[ii] - otaumax) / dt);
 		for ( t = otaumax, jj = 0 ; jj < nn ; jj++ ) {
 			t += dt;
 			if ( t > tauhi + SP_EPS )
@@ -69,7 +70,7 @@ static double getsi(double *rspect, double *per, int nper, double tau1, double t
 	int ii;
 	double si, prev, next;
 
-	si = 0.; prev = next = per[0];
+	si = 0.; prev = per[0]; next = per[0];
 	for ( ii = 0 ; ii < nper ; ii++ ) {
 		double dper;
 		if ( per[ii] < tau1 ) {
@@ -136,7 +137,7 @@ DllExport void resp(char in_type, char out_type,
 	double **si, double *tausi_lo, double *tausi_hi, char *siunits)
 {
 	int ii, nn, win_len;
-	double tausi1, tausi2, t0, tw, *mts, **rspect;
+	double tausi1 = 0, tausi2 = 0, t0, tw, *mts, **rspect;
 	BOOL fftflg = FALSE;
 
 	/* sanity checking */

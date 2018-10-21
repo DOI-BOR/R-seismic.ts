@@ -37,7 +37,8 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       ok <- ! is.na(xt[,ii])
       dxdt <- .Call("CALLfd_deriv",
                    as.double(xt[ok,ii]), as.double(dt), as.integer(nd),
-                   as.integer(order))
+                   as.integer(order),
+                   PACKAGE="seismic.ts")
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -52,7 +53,8 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   		stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
   							 xt, as.double(dt), as.integer(nd),
-  							 as.integer(order))
+  							 as.integer(order),
+  							 PACKAGE="seismic.ts")
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)
@@ -80,7 +82,8 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       ok <- ! is.na(xt[,ii])
       dxdt <- .Call("CALLfd_deriv",
                     as.double(xt[ok,ii]), as.double(dt), as.integer(nd),
-                    as.integer(order))
+                    as.integer(order),
+                    PACKAGE="seismic.ts")
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -95,7 +98,8 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
                   xt, as.double(dt), as.integer(nd),
-                  as.integer(order))
+                  as.integer(order),
+                  PACKAGE="seismic.ts")
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)
@@ -150,7 +154,8 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       ok <- ! is.na(xt@data[,ii])
       dxdt <- .Call("CALLfd_deriv",
                     as.double(xt@data[ok,ii]), as.double(dt), as.integer(nd),
-                    as.integer(order))
+                    as.integer(order),
+                    PACKAGE="seismic.ts")
       if ( is.null(dxdt.mts) )
         dxdt.mts <- data.frame(dxdt)
       else
@@ -165,7 +170,8 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
                   as.double(xt@data[ok]), as.double(dt), as.integer(nd),
-                  as.integer(order))
+                  as.integer(order),
+                  PACKAGE="seismic.ts")
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)

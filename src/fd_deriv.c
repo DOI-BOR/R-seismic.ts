@@ -1,12 +1,12 @@
 /* Finite difference derivatives */
 
-#include "ts.h"
+#include "common.h"
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
 
-#ifdef DllImport
-#  undef DllImport
-#  define DllImport DllExport
-# endif
-#include "ts_proto.h"
+#define __TS_SRC
+#include "ts.h"
 
 static void fd2(double *ts, int len, double dt, int nd, double *dts) {
 	double fd2_1_1 = 0.5 / dt;
@@ -119,16 +119,16 @@ DllExport double *fd_deriv(double *ts, int len, double dt, int nd, FdOrder order
 
 	switch ( order ) {
 		case FD_ORDER_2:
-			fd2(ts, len, dt, nd, dts); 
+			fd2(ts, len, dt, nd, dts);
 			break;
 		case FD_ORDER_4:
-			fd4(ts, len, dt, nd, dts); 
+			fd4(ts, len, dt, nd, dts);
 			break;
 		case FD_ORDER_6:
-			fd6(ts, len, dt, nd, dts); 
+			fd6(ts, len, dt, nd, dts);
 			break;
 		case FD_ORDER_8:
-			fd8(ts, len, dt, nd, dts); 
+			fd8(ts, len, dt, nd, dts);
 			break;
 		default:
 			oops("fd_deriv","order not implemented");

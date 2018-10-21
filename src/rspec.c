@@ -16,7 +16,7 @@ static void chkmax(double xx, double *xmax, int ii, int *imax)
 /* NP - get corresponding power of omega according to flag */
 static int np(char flg)
 {
-	int nn;
+	int nn = 0;
 
 	switch ( flg ) {
 		case 'a':	/* acceleration */
