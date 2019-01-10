@@ -213,6 +213,18 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 				xr[kk] *= wt[ii];
 			}
 		}
+
+		/* apply scaling factor to untapered points, if normalizing */
+		if ( do_norm ) {
+		  for ( ii = whlen ; ii < len - whlen ; ii++ ) {
+		    if ( is_cmplx ) {
+		      xc[ii].a *= norm_wt;
+		    } else {
+		      xr[ii] *= norm_wt;
+		    }
+		  }
+		}
+
 		free(wt);
 	}
 # ifndef LOG2FFT

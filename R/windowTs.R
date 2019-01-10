@@ -108,6 +108,8 @@ windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
                 as.character(type), as.logical(norm),
                 PACKAGE="seismic.ts")
   }
+  if ( ! is.na(t0) )
+    start <- start + t0
   wt <- ts(wt, start=start, deltat=dt)
 
   return(wt)
@@ -156,6 +158,8 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
                 as.character(type), as.logical(norm),
                 PACKAGE="seismic.ts")
   }
+  if ( ! is.na(t0) )
+    start <- start + t0
   wt <- signalSeries(wt, from=start, by=dt, units=units, units.position=units.position)
 
   return(wt)

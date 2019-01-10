@@ -58,6 +58,7 @@ ipa <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
   xyz <- get.xyz(xt, yt, zt, dt, demean, pct, w.len)
   len <- dim(xyz)[1]
   dt <- deltat(xyz)
+  start <- start(xyz)
 
   # get the analytic signal vector
   xyz.a <- analytic.ts(xyz)
@@ -73,7 +74,7 @@ ipa <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
   b <- Re(exp(-1i*(psi0 + 0.5*pi)) * xyz.a) # minor axis
 
   # get ts of the unit normal a x b
-  n <- unorm(a, b, dt)
+  n <- unorm(a, b, start, dt)
 
   # get the multicomponent signal amplitude
   At <- sqrt(a[,1]^2 + a[,2]^2 + a[,3]^2)
@@ -102,7 +103,7 @@ ipa <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
 
   # bind polarization attributes into an mts
   pa <- ts(cbind(ire=ire, az=rad2deg*az, plunge=plunge*rad2deg, strike=rad2deg*strike,
-                 dip=rad2deg*dip, At=At, psi0=rad2deg*psi0), deltat=dt)
+                 dip=rad2deg*dip, At=At, psi0=rad2deg*psi0), start=start, deltat=dt)
 
   # get weighted averages
   avg.ire <- sum(pa[,"ire"] * At) / sum(At)
@@ -119,7 +120,7 @@ ipa <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
 }
 
 # get the unit normal a x b
-unorm <- function(a, b, dt) {
+unorm <- function(a, b, start, dt) {
   nx <-  a[,2]*b[,3] - a[,3]*b[,2]
   ny <- -a[,1]*b[,3] + a[,3]*b[,1]
   nz <-  a[,1]*b[,2] - a[,2]*b[,1]
@@ -127,7 +128,7 @@ unorm <- function(a, b, dt) {
   nx <- nx / nn
   ny <- ny / nn
   nz <- nz / nn
-  n <- ts(cbind(nx=nx,ny=ny,nz=nz), deltat=dt)
+  n <- ts(cbind(nx=nx,ny=ny,nz=nz), start=start, deltat=dt)
 
   return(n)
 }

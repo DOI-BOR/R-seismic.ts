@@ -61,8 +61,8 @@ fas <- function(xt, dt = NA, freq.range = NA, multi.taper=TRUE,
   }
   PLAN <- NULL
 
-	multi.trace <- is.mts(xt) || is.matrix(xt) || length(dim(xt)) > 1 ||
-	  ( is(xt, "signalSeries") && ! is.null(dim(xt)) )
+	multi.trace <- is.mts(xt) ||
+	    ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
 	if ( multi.trace ) {
 	  if ( ! multi.taper ) {
   	  xt.len <- dim(xt)[1]
@@ -120,9 +120,12 @@ fas <- function(xt, dt = NA, freq.range = NA, multi.taper=TRUE,
 	  }
 	  colnames(spec) <- cnames
 	} else {
-	  if ( is(xt, "signalSeries") )
-	    zt <- xt@data
-	  else
+	  if ( is(xt, "signalSeries") ) {
+	    if ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] == 1 )
+	      zt <- xt@data[,1]
+	    else
+	      zt <- xt@data
+	  } else
 	    zt <- xt
 	  if ( demean )
 	    zt <- zt - mean(zt)

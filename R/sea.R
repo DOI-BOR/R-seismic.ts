@@ -58,6 +58,7 @@ sea <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
   xyz <- get.xyz(xt, yt, zt, dt, demean, pct, w.len)
   len <- dim(xyz)[1]
   dt <- deltat(xyz)
+  start <- start(xyz)
 
   # get the analytic signal vector
   xyz.a <- analytic.ts(xyz)
@@ -91,7 +92,7 @@ sea <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
   # bind polarization attributes into an mts
   pa <- ts(cbind(ire=ire, az=az*rad2deg, plunge=plunge*rad2deg,
                  strike=big.omega*rad2deg, dip=dip*rad2deg,
-                 rake=little.omega*rad2deg), deltat=dt)
+                 rake=little.omega*rad2deg), start=start, deltat=dt)
 
   # get weighted averages
   avg.ire <- sum(pa[,"ire"] * a) / sum(a)

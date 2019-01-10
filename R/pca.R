@@ -78,6 +78,7 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA,
 	xyz <- get.xyz(xt, yt, zt, dt, demean, pct)
 	len <- dim(xyz)[1]
 	dt <- deltat(xyz)
+	start <- start(xyz)
 
 	if ( analytic ) {
 	  # use analytic signal method for each point in time, if requested
@@ -146,7 +147,7 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA,
     pa.values <- t(pa.values)
     colnames(pa.values) <- c("ire", "az", "plunge", "rect", "plan", "dop")
 
-    ret <- list(pa=ts(pa.values, deltat=dt), ev=ev, alpha=alpha)
+    ret <- list(pa=ts(pa.values, start=start, deltat=dt), ev=ev, alpha=alpha)
 	} else {
 	  # use the auto and cross covariances at lag 0 of the entire data series. Note:
 	  # acf accepts only real inputs
@@ -341,11 +342,17 @@ get.xyz <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
     z <- mavg(z,w.len)
   }
 
+  start <- 0
+  if ( is.ts(xt) || is.mts(xt) )
+    start <- start(xt)[1]
+  else if ( is(xt, "signalSeries") )
+    start <- xt@positions@from
+
   if ( is.na(dt) )
     dt <- 0.01
 
   # bind components into an mts
-  xyz <- ts(cbind(x,y,z), deltat=dt)
+  xyz <- ts(cbind(x,y,z), start=start, deltat=dt)
 
   # taper, if requested
   if ( ! is.na(pct) )
