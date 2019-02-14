@@ -81,16 +81,15 @@ decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
     xt.len <- dim(xt)[1]
     if ( xt.len < 2 )
       stop("input time series must have at least 2 valid points")
-    xdt.mts = NULL
+    xt.dec = NULL
     for ( ii in 1:dim(xt)[2] ) {
       xdt <- dec.vec(xt[,ii], factor, lp.filter)
-      if ( is.null(xdt.mts) )
-        xdt.mts <- data.frame(xdt)
+      if ( is.null(xt.dec) )
+        xt.dec <- data.frame(xdt)
       else
-        xdt.mts <- data.frame(xdt.mts, xdt)
+        xt.dec <- data.frame(xt.dec, xdt)
     }
-    colnames(xdt.mts) <- colnames(xt)
-    xt.dec <- xdt.mts
+    colnames(xt.dec) <- colnames(xt)
   } else {
     len <- length(xt)
     if ( len < 2 )
@@ -128,7 +127,7 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
     xt.dec = NULL
     for ( ii in 1:dim(xt)[2] ) {
       xdt <- dec.vec(xt@data[,ii], factor, lp.filter)
-      if ( is.null(xdt.mts) )
+      if ( is.null(xt.dec) )
         xt.dec <- data.frame(xdt)
       else
         xt.dec <- data.frame(xt.dec, xdt)

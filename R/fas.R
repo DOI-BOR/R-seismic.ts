@@ -1,10 +1,10 @@
-#' Compute a Fourier amplitude spectrum.
+#' Compute a Fourier amplitude or phase spectrum.
 #'
-#' \code{fas} is used to compute a Fourier amplitude spectrum
+#' \code{fas} is used to compute a Fourier amplitude or phase spectrum
 #' of a univariate or multivariate time series.
 #'
 #' @param xt required equally-spaced time series,
-#' represented as a numeric \code{\link{vector}}, \code{link{matrix}},
+#' represented as a numeric \code{\link{vector}}, \code{\link{matrix}},
 #' \code{\link{data.frame}}, \code{\link{ts}}, \code{\link{mts}}, or
 #' \code{\link{signalSeries}} object.
 #' @param dt sample interval, in seconds. Default is 0.01
