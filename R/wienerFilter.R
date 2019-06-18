@@ -36,7 +36,7 @@ wienerFilter <- function(x.data, z.data, length.filt = NULL, lag = NULL,
 	x.data.len <- length(x)
 	f.len = length.filt
 	if ( is.null(length.filt) )
-		f.len <- max( min(2, x.data.len), 0.2 * x.data.len)
+		f.len <- round(max( min(2, x.data.len), 0.2 * x.data.len))
 
 	# handle case where lag exceeds the filter length
 	diff <- lag - f.len
