@@ -11,6 +11,7 @@
 #' \code{factor} will be rounded to the nearest integer, and the time-series
 #' will be decimated. If \code{factor < 1}, then the time series will be
 #' augmented by \code{(1/factor)} using \code{\link{augment}}.
+#' @param first.t Index of first sample point to start decimation (default is 1).
 #' @param lp.filter Set to \code{TRUE} to suitably low-pass filter the time
 #' series before down-sampling, to avoid aliasing. Default is \code{FALSE},
 #' which assumes the user has already done the necessary low-pass filtering.
@@ -31,7 +32,7 @@
 
 #' @describeIn decimate.default decimate a numeric \code{\link{vector}}, or the
 #' columns of a numeric \code{\link{matrix}} or \code{\link{data.frame}}.
-decimate.default <- function(xt, factor = NA, lp.filter=FALSE) {
+decimate.default <- function(xt, factor=NA, first.t=NA, lp.filter=FALSE) {
   if ( is.na(factor) || (factor >= 1 && as.integer(round(factor)) == 1) )
     return(xt)
 
@@ -42,7 +43,7 @@ decimate.default <- function(xt, factor = NA, lp.filter=FALSE) {
 	    stop("input time series must have at least 2 valid points")
 	  xdt.mts = NULL
 	  for ( ii in 1:dim(xt)[2] ) {
-	    xdt <- dec.vec(xt[,ii], factor, lp.filter)
+	    xdt <- dec.vec(xt[,ii], factor, first.t, lp.filter)
 	    if ( is.null(xdt.mts) )
 	      xdt.mts <- data.frame(xdt)
 	    else
@@ -54,7 +55,7 @@ decimate.default <- function(xt, factor = NA, lp.filter=FALSE) {
 	  len <- length(xt)
 	  if ( len < 2 )
 	    stop("input time series must have at least 2 valid points")
-	  xt.dec <- dec.vec(xt, factor, lp.filter)
+	  xt.dec <- dec.vec(xt, factor, first.t, lp.filter)
 	}
 
 	return(xt.dec)
@@ -63,7 +64,7 @@ setGeneric("decimate", def=decimate.default)
 
 #' @describeIn decimate.default decimate a numeric \code{\link{ts}} or
 #' \code{\link{mts}} time series.
-decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
+decimate.ts <- function(xt, factor=NA, first.t=NA, lp.filter=FALSE) {
   if ( is.na(factor) || (factor >= 1 && as.integer(round(factor)) == 1) )
     return(xt)
 
@@ -83,7 +84,7 @@ decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
       stop("input time series must have at least 2 valid points")
     xt.dec = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      xdt <- dec.vec(xt[,ii], factor, lp.filter)
+      xdt <- dec.vec(xt[,ii], factor, first.t, lp.filter)
       if ( is.null(xt.dec) )
         xt.dec <- data.frame(xdt)
       else
@@ -94,7 +95,7 @@ decimate.ts <- function(xt, factor = NA, lp.filter=FALSE) {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
-    xt.dec <- dec.vec(xt, factor, lp.filter)
+    xt.dec <- dec.vec(xt, factor, first.t, lp.filter)
   }
   xt.dec <- ts(xt.dec, start=start, deltat=dt)
 
@@ -104,7 +105,7 @@ setMethod("decimate", "ts", decimate.ts)
 
 #' @describeIn decimate.default decimate a numeric \code{\link{signalSeries}}
 #' time series.
-decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
+decimate.signalSeries <- function(xt, factor=NA, first.t=NA, lp.filter=FALSE) {
   if ( is.na(factor) || (factor >= 1 && as.integer(round(factor)) == 1) )
     return(xt)
 
@@ -126,7 +127,7 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
       stop("input time series must have at least 2 valid points")
     xt.dec = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      xdt <- dec.vec(xt@data[,ii], factor, lp.filter)
+      xdt <- dec.vec(xt@data[,ii], factor, first.t, lp.filter)
       if ( is.null(xt.dec) )
         xt.dec <- data.frame(xdt)
       else
@@ -137,7 +138,7 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
     len <- length(xt)
     if ( len < 2 )
       stop("input time series must have at least 2 valid points")
-    xt.dec <- dec.vec(xt@data, factor, lp.filter)
+    xt.dec <- dec.vec(xt@data, factor, first.t, lp.filter)
   }
   xt.dec <- signalSeries(xt.dec, from=start, by=dt, units=units,
                           units.position=units.position)
@@ -147,9 +148,12 @@ decimate.signalSeries <- function(xt, factor = NA, lp.filter=FALSE) {
 setMethod("decimate", "signalSeries", decimate.signalSeries)
 
 # decimate a numeric vector
-dec.vec <- function(xt, factor=NA, lp.filter=FALSE) {
+dec.vec <- function(xt, factor=NA, first.t=NA, lp.filter=FALSE) {
   if ( ! is.numeric(xt) )
     error("decimate: only numeric time series are supported")
+
+  if ( is.na(first.t) )
+    first.t <- 1
 
   if ( factor < 1. ) {
     x.dec <- augment(xt, 1./factor)
@@ -162,7 +166,7 @@ dec.vec <- function(xt, factor=NA, lp.filter=FALSE) {
                     f.hi=f.hi, dir="zp")
     }
     x.len <- length(xt)
-    x.dec <- xt[seq(1,x.len,skip)]
+    x.dec <- xt[seq(first.t, x.len, skip)]
   }
   return ( x.dec )
 }

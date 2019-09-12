@@ -63,7 +63,9 @@
 #' @describeIn filter.llnl.default filters a numeric \code{vector} or \code{matrix}.
 filter.llnl.default <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
 												f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
-	multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
+	# multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
+	multi.trace <- is.mts(xt) || is.matrix(xt) ||
+	    ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
 	if ( is.na(dt) )
 	  dt <- 0.01
 
@@ -113,7 +115,8 @@ setGeneric("filter.llnl",def=filter.llnl.default)
 #' @describeIn filter.llnl.default filters a \code{ts} or \code{mts} object.
 filter.llnl.ts <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                            f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
-  multi.trace <- is.mts(xt)
+  multi.trace <- is.mts(xt) ||
+      ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
   dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
@@ -166,7 +169,8 @@ setMethod("filter.llnl","ts",filter.llnl.ts)
 #' @describeIn filter.llnl.default filters a \code{signalSeries} object.
 filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=NA,
                                      f.lo=NA, f.hi=NA, dir=NA, cheb.sb.atten=NA, cheb.tr.bw=NA) {
-  multi.trace <- ! is.null(dim(xt))
+  multi.trace <- is.mts(xt) ||
+      ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
   if ( is.na(dt) )
     dt <- deltat(xt)
   start <- xt@positions@from
@@ -210,8 +214,8 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
                 PACKAGE="seismic.ts")
+    names(ft) <- names(xt@data)
   }
-  names(ft) <- names(xt)
   ft <- signalSeries(ft, from=start, by=dt, units=units, units.position=units.position)
 
   return(ft)

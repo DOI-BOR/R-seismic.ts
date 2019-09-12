@@ -55,6 +55,7 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   							 xt, as.double(dt), as.integer(nd),
   							 as.integer(order),
   							 PACKAGE="seismic.ts")
+    names(dxdt) <- names(xt)
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)
@@ -67,7 +68,9 @@ setGeneric("deriv_fd",def=deriv_fd.default)
 deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
-  multi.trace <- is.mts(xt)
+  multi.trace <- is.mts(xt) ||
+      ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
+
   dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
@@ -100,6 +103,7 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
                   xt, as.double(dt), as.integer(nd),
                   as.integer(order),
                   PACKAGE="seismic.ts")
+    names(dxdt) <- names(xt)
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)
@@ -113,7 +117,8 @@ setMethod("deriv_fd","ts",deriv_fd.ts)
 deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
-  multi.trace <- ! is.null(dim(xt))
+  multi.trace <- is.mts(xt) ||
+      ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
 
   dt <- deltat(xt)
   if ( is.na(dt) )
@@ -126,13 +131,13 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
     units.new <- NA
   } else {
     units.parts <- unlist(strsplit(
-      sub("^([[:alpha:]]+)(/+.+)","\\1 \\2", as.character(units)),
-      " ", fixed=TRUE))
+        sub("^([[:alpha:]]+)(/+.+)","\\1 \\2", as.character(units)),
+        " ", fixed=TRUE))
     if ( length(units.parts) > 1 ) {
       secs <- unlist(strsplit(
-        sub("(.+)(\\^[0-9])*","\\1 \\2", units.parts[2]),
-        " ", fixed=TRUE))
-      if ( grep("^\\^",secs[2]) )
+          sub("(.+)(\\^[0-9])*","\\1 \\2", units.parts[2]),
+          " ", fixed=TRUE))
+      if ( length(secs) > 1 && grep("^\\^",secs[2]) )
         ex <- sub("\\^([0-9])*","\\1", secs[2])
       else
         ex <- nchar(secs) / 2
@@ -172,6 +177,7 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
                   as.double(xt@data[ok]), as.double(dt), as.integer(nd),
                   as.integer(order),
                   PACKAGE="seismic.ts")
+    names(dxdt) <- names(xt@data)
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)

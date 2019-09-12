@@ -124,7 +124,7 @@ augment <- function(xt, factor=NA) {
 	  if ( is(xt, "signalSeries") ) {
 	    xt.aug <- splus2R::signalSeries(aug, from=xt@positions@from, by=dt.aug,
 	                                    units=xt@units,
-	                                    units.position=xt.units.position)
+	                                    units.position=xt@units.position)
 	  } else if ( is(xt, "ts") ) {
 	    xt.aug <- ts(aug, start=start(xt)[1], deltat=dt)
 	  } else {

@@ -1,6 +1,10 @@
 #include "resp.h"
 #include "resp_proto.h"
 
+DllImport void oops ( char *, char * );
+DllImport void smsg ( char *, char * );
+DllImport char msgbuf[];
+
 /* CHKMAX - check for a max */
 static void chkmax(double xx, double *xmax, int ii, int *imax)
 {
@@ -11,6 +15,18 @@ static void chkmax(double xx, double *xmax, int ii, int *imax)
 		*xmax = tst;
 		*imax = ii;
 	}
+}
+
+double getmax(double *ts, int len, int *maxi) {
+  /* find max of time series */
+  double max = -1;
+  int ii, imax = 0;
+  /* find max - skip first few points */
+  for ( ii = SKIP ; ii < len - SKIP ; ii++ )
+    chkmax(ts[ii],&max,ii,&imax);
+  if ( maxi != NULL )
+    *maxi = imax;
+  return(max);
 }
 
 /* NP - get corresponding power of omega according to flag */
@@ -42,34 +58,34 @@ int getpow(char inflg, char outflg)
 }
 
 /* multiply relative displacement response by
-	appropriate power of f0 to get desired response.
-	If this is a zero-period call, assume we have
-	the max of the acceleration */
+   appropriate power of f0 to get desired response.
+   If this is a zero-period call, assume we have
+   the max of the acceleration */
 static double scale(double tau, double max_disp, char type) {
-	double max_val = max_disp;
-	double c = 2. * M_PI / tau;
+  double max_val = max_disp;
+  double c = tau > MIN_TAU ? 2 * M_PI / tau : 0;
 
-	switch ( type ) {
-		case 'a': /* pseudo absolute acceleration */
-			if ( tau > 0.00001 )
-				max_val *= c * c;
-			break;
-		case 'v': /* pseudo relative velocity */
-			if ( tau > 0.00001 )
-				max_val *=  c;
-			else
-				max_val = 0.;
-			break;
-		case 'd': /* relative displacement */
-			if ( tau < 0.00001 )
-				max_val = 0;
-			break;
-	}
-	return (max_val);
+  switch ( type ) {
+    case 'a': /* pseudo absolute acceleration */
+      if ( tau > MIN_TAU )
+        max_val *= c * c;
+      break;
+    case 'v': /* pseudo relative velocity */
+      if ( tau > MIN_TAU )
+        max_val *=  c;
+      else
+        max_val = 0.;
+      break;
+    case 'd': /* relative displacement */
+      if ( tau < MIN_TAU )
+        max_val = 0;
+      break;
+  }
+  return (max_val);
 }
 
 /* RPEAK - get peak response for a particular natural frequency using
-	recursive method by IIR filter method */
+	 recursive method by IIR filter method */
 double rpeak(double tau, double lambda, double *ts, int len, double dt, char type)
 {
 	int ii, imax;
@@ -78,12 +94,9 @@ double rpeak(double tau, double lambda, double *ts, int len, double dt, char typ
 	double max;
 
 	/* if its the zero-period case, just find max of time series */
-	if ( tau < 0.00001 ) { /* zero-period case */
-		/* find max - skip first few points */
-		max = 0.; imax = 0;
-		for ( ii = 6 ; ii < len ; ii++ )
-			chkmax(ts[ii],&max,ii,&imax);
-		return(scale(tau, max, type));
+	if ( tau <= MIN_TAU ) { /* zero-period case */
+  	max = type == 'v' || type == 'd' ? 0 : getmax(ts, len, &imax);
+  	  return max;
 	}
 
 	if ( lambda > 1 )
@@ -122,15 +135,12 @@ double bzpeak(double tau, double lambda, double *ts, int len, double dt, char ty
 	int ii, imax;
 	double omegas, cw, sw, denom, aa[3], bb[3];
 	double yy, yy1, yy2;
-	double max;
+	double max, rs;
 
 	/* if its the zero-period case, just find max of time series */
-	if ( tau < 0.00001 ) { /* zero-period case */
-		/* find max - skip first few points */
-		max = 0.; imax = 0;
-		for ( ii = 6 ; ii < len ; ii++ )
-			chkmax(ts[ii],&max,ii,&imax);
-		return(scale(tau, max, type));
+	if ( tau <= MAX(2*dt, MIN_TAU) ) { /* zero-period case */
+		max = type == 'v' || type == 'd' ? 0 : getmax(ts, len, &imax);
+		return max;
 	}
 
 	if ( lambda > 1 )
@@ -161,7 +171,13 @@ double bzpeak(double tau, double lambda, double *ts, int len, double dt, char ty
 	}
 
 	/* now have relative displacement - scale and return */
-	return (scale(tau, max, type));
+  rs = scale(tau, max, type);
+	if ( type == 'a' && tau < 0.1 ) {
+	  /* don't let spectral axceleration drop below PKA for periods < 0.1 sec */
+	  max = getmax(ts, len, &imax);
+	  rs = MAX(max, rs);
+	}
+	return rs;
 }
 
 /* LSPEAK - get peak response for a particular natural frequency using
@@ -180,14 +196,9 @@ double lspeak(double tau, double lambda, double *ts, int len, double dt, char ty
 	int   ixmax, ixdotmax, izmax;
 
 	/* if its the zero-period case, just find max of time series */
-	if ( tau < 0.00001 ) {  /* zero-period case */
-		if ( type == 'v' || type == 'd' )
-			return( 0. );
-		/* find max - skip first few points */
-		zzmax = 0.; izmax = 0;
-		for ( ii = 6 ; ii < len ; ii++ )
-			chkmax(ts[ii],&zzmax,ii,&izmax);
-		return(zzmax);
+	if ( tau <= MIN_TAU ) {  /* zero-period case */
+		zzmax = type == 'v' || type == 'd' ? 0 : getmax(ts, len, &izmax);
+		return zzmax;
 	}
 
 	if ( lambda > 1 )
@@ -252,21 +263,21 @@ double lspeak(double tau, double lambda, double *ts, int len, double dt, char ty
 static double scalec(double tau, double lambda, double dt, double max_disp, char type) {
 	double max_val = max_disp;
 	double tmp = 2. * M_PI * sqrt(1. - lambda * lambda);
-	double c = tau * dt / tmp;
+	double c = tmp > 0 ? tau * dt / tmp : 0;
 
 	if ( type == 'a' ) {
-		if ( tau > 0.00001 ) {
+		if ( tau > MIN_TAU ) {
 			max_val *= c;
 			max_val *= 4. * M_PI * M_PI / ( tau * tau );
 		}
 	} else if ( type == 'v' ) {
-		if ( tau > 0.00001 ) {
+		if ( tau > MIN_TAU ) {
 			max_val *= 2. * M_PI * c / tau;
 		} else {
 			max_val = 0.;
 		}
 	} else {
-		if ( tau > 0.00001 ) {
+		if ( tau > MIN_TAU ) {
 			max_val *= c;
 		} else {
 			max_val = 0.;
@@ -282,19 +293,11 @@ double cpeak(double tau, double lambda, double *ts, int len, double dt, char typ
 	int ii, kk, jj, jlo, jhi, imax, lenosc;
 	double kw, kwp, *osc;
 	double tmp, max;
-	double sum;
+	double sum, rs;
 
-	if ( tau < 0.00001 ) { /* zero-period case */
-		/* find max - skip first few points */
-		max = 0.; imax = 0;
-		for ( ii = 6 ; ii < len ; ii++ ) {
-			tmp = ABS(ts[ii]);
-			if ( tmp > max ) {
-				max = tmp;
-				imax = ii;
-			}
-		}
-		return(scalec(tau, lambda, dt, max, type));
+	if ( tau < MIN_TAU ) { /* zero-period case */
+    max = type == 'v' || type == 'd' ? 0 : getmax(ts, len, &imax);
+	  return max;
 	}
 
 	if ( lambda > 1 )
@@ -338,7 +341,13 @@ double cpeak(double tau, double lambda, double *ts, int len, double dt, char typ
 			break;
 	}
 
-	return(scalec(tau, lambda, dt, max, type));
+	rs = scalec(tau, lambda, dt, max, type);
+	if ( type == 'a' && tau < 0.1 ) {
+	  /* don't let spectral axceleration drop below PKA for periods < 0.1 sec */
+	  max = getmax(ts, len, &imax);
+	  rs = MAX(max, rs);
+	}
+	return rs;
 }
 
 
@@ -440,19 +449,19 @@ void fft_int(double *ts, double dt, int len, int nn)
 	the max of the acceleration */
 static double scalef(double tau, double max_disp, double f0, char type) {
 	double max_val = max_disp;
-	double c = 2. * M_PI / tau;
+	double c = tau > MIN_TAU ? 2. * M_PI / tau : 0;
 	c = 2. * M_PI * f0;
 	switch ( type ) {
 		case 'a': /* pseudo absolute acceleration */
 			break;
 		case 'v': /* pseudo relative velocity */
-			if ( tau > 0. )
+			if ( tau > MIN_TAU )
 				max_val /= c;
 			else
 				max_val = 0.;
 			break;
 		case 'd': /* relative displacement */
-			if ( tau > 0. )
+			if ( tau > MIN_TAU )
 				max_val /= c * c;
 			else
 				max_val = 0;
@@ -514,9 +523,9 @@ double fpeak(double tau, double lambda, double *ts, int len, double dt, char typ
 	cts = ifft(s, len);	// in-place fft, so just another pointer to sbuf
 
 	/* find the peak absolute value of the time series, which is
-		real. Skip the first few points */
+		 real. Skip the first few points */
 	max = 0; imax = 0;
-	for ( ii = 6 ; ii < len ; ++ii)
+	for ( ii = SKIP ; ii < len - SKIP ; ++ii)
 		chkmax(ABS(cts[ii].r),&max,ii,&imax);
 
 	free( sbuf );

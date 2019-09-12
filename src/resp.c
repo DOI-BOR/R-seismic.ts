@@ -110,7 +110,12 @@ static double *getpsr(double *ts, int len, double dt, double *per, int nper,
 	/* for each oscillator period, get peak response */
 	for ( ii = 0 ; ii < nper ; ii++ ) {
 		double tau = per[ii];
-		if ( rm == RM_IIR )
+
+	  if ( tau <= MAX(2*dt, MIN_TAU) ) { /* zero-period case */
+	    /* if its the zero-period case, just find max of time series */
+      int imax;
+  	  rspect[ii] = otype == 'v' || otype == 'd' ? 0 : getmax(ts, len, &imax);
+	  } else if ( rm == RM_IIR )
 			rspect[ii] = rpeak(tau,lam,ts,len,dt,otype);
 		else if ( rm == RM_BZ )
 			rspect[ii] = bzpeak(tau,lam,ts,len,dt,otype);
@@ -142,36 +147,38 @@ DllExport void resp(char in_type, char out_type,
 
 	/* sanity checking */
 	if ( ts == NULL || len < 3 )
-		oops("do_resp","null time series, and/or length < 3");
+		oops("resp","null time series, and/or length < 3");
 	else if ( dt <= 0 )
-		oops("do_resp","dt <= 0");
+		oops("resp","dt <= 0");
 	else if ( per == NULL || nper == NULL )
-		oops("do_resp","null period and/or count pointer");
+		oops("resp","null period and/or count pointer");
 	else if ( lambda == NULL || nlam == NULL )
-		oops("do_resp","null damping and/or count pointer");
-	else if ( strchr("avd",in_type) == NULL || strchr("avd",out_type) == NULL )
-		oops("do_resp","unknown input or output type");
-	else if ( ptap > 50 )
-		oops("do_resp","ptap > 50");
+		oops("resp","null damping and/or count pointer");
+	else if ( strchr("avd",in_type) == NULL || strchr("avd",out_type) == NULL ) {
+	  sprintf(msgbuf,"unknown input type (%c) or output type (%c): need a, v, or d",
+           in_type, out_type);
+		oops("resp",msgbuf);
+	} else if ( ptap > 50 )
+		oops("resp","ptap > 50");
 	else if ( rspectra == NULL || si == NULL )
-		oops("do_resp","null response spectrum and/or SI pointer");
+		oops("resp","null response spectrum and/or SI pointer");
 
 	/* de-mean and window the input time series with a Hanning taper */
 	t0 = 0; tw = len * dt;	/* use full time series length */
 	mts = window_ts(ts,len,FALSE,dt,t0,tw,FALSE,ptap,TW_HANNING,FALSE,&win_len);	/* returns windowed time series; ts is unchanged */
 
 	nn = getpow(in_type,'a');
+	if ( nn > 0 ) {
 #ifdef HAVE_FFTW3
-	if ( fftflg && nn < 0 ) {
+	if ( fftflg )
 		fft_int(mts, dt, len, nn);
-	} else
+	else
 #endif
-	{
-		if ( nn > 0 ) {
-			double *dts = fd_deriv(mts, win_len, dt, nn, FD_ORDER_8);
-			free(mts);
-			mts = dts;
-		}
+  	{
+  		double *dts = fd_deriv(mts, win_len, dt, nn, FD_ORDER_8);
+  		free(mts);
+  		mts = dts;
+  	}
 	}
 
 	/* get damping, if not specified on input */

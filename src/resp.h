@@ -31,3 +31,7 @@ typedef struct dcmplx {
 # endif
 #endif
 #include "resp_proto.h"
+
+#define SKIP 5 /* when finding max, skip this many points from beginning and end */
+#define MIN_TAU 0.00001 /* any period less than this is assumed to be PHA */
+
