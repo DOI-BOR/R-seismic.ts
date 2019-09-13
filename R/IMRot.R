@@ -10,8 +10,12 @@
 #' equal-length univariate time series.
 #' Alternatively, if \code{xt} is a 2- or 3-component multivariate time series,
 #' including \code{\link{matrix}}, \code{\link{data.frame}}, \code{\link{ts}},
-#' \code{\link{mts}} or \code{\link{signalSeries}}, then the Y and Z components
-#' are taken from \code{xt}, and \code{yt} is not used.
+#' \code{\link{mts}} or \code{\link{signalSeries}}, then the X and Y components
+#' are taken from \code{xt}, and \code{yt} is not used. In this case, the X and Y
+#' components are taken as the first and second components, respectively, unless
+#' the column names use the SEED naming convention (e.g., BHZ, BHN, BHE), in which
+#' case the X and Y components are assigned from the components having E and N names.
+#' The Z component is ignored.
 #' @param dt Sample interval, in seconds. Not used for
 #' \code{\link{ts}} or \code{\link{signalSeries}} inputs, unless the time
 #' step of the object is not set. Default is 0.01 seconds.
@@ -57,7 +61,8 @@
 #' specific list returned is:
 #' \code{list(damping, periods, pct, GMpeakD, IMpeakD, GMpeakI, IMpeakI,
 #' GMRotD, RotD, GMRotI, RotI, rs.type, rs.units, rs.method,
-#' GMsiD, IMsiD, GMsiI, IMsiI, SI.per.range, SI.units)}
+#' GMsiD, IMsiD, GMsiI, IMsiI, SI.per.range, SI.units,
+#' IMpenalty, GMpenalty, GMrs.D, IMrs.D, GMAngleD, IMAngleD)}
 #'
 #' @details Boore et al (2006) and Boore (2010) define several
 #' orientation-independent measures of ground motion, including GMRotD50,
@@ -127,7 +132,6 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
       ( ! is.null(dim(xt)) && length(dim(xt)) > 1 && dim(xt)[2] > 1 )
 
   # split out the X and Y components
-  cnames.new <- NULL
   if ( multi.trace ) {
     if ( dim(xt)[2] < 2 )
       stop("multi-trace time series must have at least 2 components")
@@ -137,7 +141,7 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
       # try to get traces assuming SEED naming convention
       x.ind <- grep("E$", cnames)
       y.ind <- grep("N$", cnames)
-      if ( x.ind > 0 && y.ind > 0 ) {
+      if ( length(x.ind) > 0 && length(y.ind) > 0 ) {
         X <- xt[,x.ind]
         Y <- xt[,y.ind]
         have.SEED.traces = TRUE
@@ -174,9 +178,9 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
   angles.names <- NULL
   angles1.names <- NULL
   for ( phi in angles ) {
-    angles.names <- c(angles.names, sprintf("%.1 deg",phi))
-    angles1.names <- c(angles1.names, sprintf("%.1 deg",phi),
-                       sprintf("%.1 deg",phi + 90))
+    angles.names <- c(angles.names, sprintf("%.1f deg",phi))
+    angles1.names <- c(angles1.names, sprintf("%.1f deg",phi),
+                       sprintf("%.1f deg",phi + 90))
 
     # get the rotated time histories
     RX <- X * cos(phi * deg2rad) + Y * sin(phi * deg2rad) # 0-90 deg
@@ -235,6 +239,36 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
     IMRotD <- c(IMRotD, quantile(IMrs.D[ii,], prob, names=FALSE))
   }
 
+  # remove periods with zero-spectra (velocity and displacement spectra)
+  nonzero.ind <- which(GMRotD > 0)
+  if ( length(nonzero.ind) < length(rs.periods) ) {
+    rs.periods <- rs.periods[nonzero.ind]
+    GMrs.D <- GMrs.D[nonzero.ind,]
+    IMrs.D <- IMrs.D[nonzero.ind,]
+    GMRotD <- GMRotD[nonzero.ind]
+    IMRotD <- IMRotD[nonzero.ind]
+  }
+
+  # get the angles for the percentile values of the response spectra, by period
+  GMAngleD <- NULL
+  IMAngleD <- NULL
+  for ( ii in 1:length(rs.periods) ) {
+    # for each response period, get the percentile value over all angles
+    eps <- 1e-2
+    ang.ind <- which.min( abs(GMrs.D[ii,] - GMRotD[ii]) )
+    GMAngleD <- c(GMAngleD, angles[ang.ind])
+    # for IMs over 0-180 deg, we computed alternating pairs of values at phi,
+    # and phi + 90, so to recover the actual angle from the index we can use
+    # the fact that odd indexes are for phi, and even indexes are for phi + 90
+    IM.ang.ind <- which.min( abs(IMrs.D[ii,] - IMRotD[ii]) )
+    ang.ind <- (IM.ang.ind + 1) %/% 2
+    phi <- angles[ang.ind]
+    if ( IM.ang.ind %% 2 == 0 )
+      phi <- phi + 90
+    IMAngleD <- c(IMAngleD, phi)
+  }
+
+
   ######### get the period-independent results
 
   # compute the penalty functions
@@ -260,24 +294,21 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
   # find the angles (and indices) which minimize the penalty functions
   GMmin.phi.ind <- which.min(GMpenalty)
   GMmin.phi <- angles[GMmin.phi.ind]
-  # for IMs over 0-180 deg, we computed alternating pairs of values at phi,
-  # and phi + 90, so need to recover the actual angle from the index. Use
-  # the fact that odd indexes are for phi, and even indexes are for phi + 90
   IMmin.phi.ind <- which.min(IMpenalty)
   ang.ind <- (IMmin.phi.ind + 1) %/% 2
   IMmin.phi <- angles[ang.ind]
   if ( IMmin.phi.ind %% 2 == 0 )
     IMmin.phi <- IMmin.phi + 90
 
-  # get the independent peak values at the minimum angle
+  # get the peak values at the minimum angle
   GMpeakI <- GMpeak.D[GMmin.phi.ind]
   IMpeakI <- IMpeak.D[IMmin.phi.ind]
 
-  # get the independent response spectra at the minimum angle
+  # get the response spectra at the minimum angle
   GMRotI <- GMrs.D[,GMmin.phi.ind]
   IMRotI <- IMrs.D[,IMmin.phi.ind]
 
-  # get the independent spectrum intensities at the minimum angle
+  # get the spectrum intensities at the minimum angle
   GMsiI <- GMsi.D[GMmin.phi.ind]
   IMsiI <- GMsi.D[IMmin.phi.ind]
 
@@ -297,7 +328,8 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
               GMsiD=GMsiD, IMsiD=IMsiD, GMsiI=GMsiI, IMsiI=IMsiI,
               SI.per.range=SI.per.range, SI.units=SI.units,
               GMpenalty=GMpenalty, IMpenalty=IMpenalty,
-              GMrs.D=GMrs.D, IMrs.D=IMrs.D)
+              GMrs.D=GMrs.D, IMrs.D=IMrs.D,
+              GMAngleD=GMAngleD, IMAngleD=IMAngleD)
 
 }
 setGeneric("IMRot",def=IMRot.default)
@@ -326,7 +358,7 @@ IMRot.ts <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="acc",
       # try to get traces assuming SEED naming convention
       x.ind <- grep("E$", cnames)
       y.ind <- grep("N$", cnames)
-      if ( x.ind > 0 && y.ind > 0 ) {
+      if ( length(x.ind) > 0 && length(y.ind) > 0 ) {
         X <- xt[,x.ind]
         Y <- xt[,y.ind]
         have.SEED.traces = TRUE
@@ -391,7 +423,7 @@ IMRot.signalSeries <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.typ
       # try to get traces assuming SEED naming convention
       x.ind <- grep("E$", cnames)
       y.ind <- grep("N$", cnames)
-      if ( x.ind > 0 && y.ind > 0 ) {
+      if ( length(x.ind) > 0 && length(y.ind) > 0 ) {
         X <- xt@data[,x.ind]
         Y <- xt@data[,y.ind]
         have.SEED.traces = TRUE
