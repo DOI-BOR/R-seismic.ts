@@ -40,7 +40,7 @@
 #' \item \href{http://www.iitk.ac.in/nicee/wcee/article/13_243.pdf}{Anderson (2004)}
 #' Quantitative measure of the goodness-of-fit of synthetic seismograms.
 #' \item \href{http://link.aip.org/link/?EQS/22/985/1}{Kempton and Stewart (2006)}
-#'  Equations for Significant Duration of Earthquake Ground Motions Considering Site and Near-Source Effects.
+#' Equations for Significant Duration of Earthquake Ground Motions Considering Site and Near-Source Effects.
 #' }
 #' @keywords ts
 #'
@@ -64,12 +64,15 @@ ai <- function(at, dt=NA, in.units=NA) {
 	if ( is(at, "ts") )
 	  start <- start(at)[1]
 
-	g <- 9.81
-	coeff <- 0.5 * pi / g
+	g <- 9.80665 # standard gravity, in m/s^2
+	coeff <- 0.5 * pi / g # integral coefficient for acc in SI units
+	# AI units are SI. Need to convert input units to SI, so multiply
+	# coefficient by x2mks^2 (because integral is a^2), where x2mks
+	# is 1e-2 for cgs, or g for g
 	if ( in.units == "cgs" || in.units == "cm/s/s" || in.units == "cm/s^2" )
 	  coeff <- coeff * 1e-4
 	else if ( in.units == "g" )
-	  coeff <- coeff * g
+	  coeff <- coeff * g * g
 
 	multi.trace <- is.mts(at) || is.matrix(at) || length(dim(at)) > 1 ||
     ( is(at, "signalSeries") && ! is.null(dim(at)) )

@@ -167,7 +167,7 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
   angles <- seq(from=0, to=(90 - ddeg), by=ddeg )
 
   ######### get the period-dependent results
-  periods <- NULL
+  rs.periods <- NULL
   GMrs.D <- NULL
   GMpeak.D <- NULL
   GMsi.D <- NULL
@@ -212,9 +212,9 @@ IMRot.default <- function(xt, yt, dt=NA, units.ts=NA, ts.type="vel", rs.type="ac
     IMsi.D <- c(IMsi.D, rs.x$SI, rs.x1$SI) # 0-90, 90-180 deg
 
     # get list of response periods and other info the first time through
-    if ( is.null(periods) ) {
-      rs.damping <- rs.x$damping
+    if ( is.null(rs.periods) ) {
       rs.periods <- rs.x$periods
+      rs.damping <- rs.x$damping
       rs.type.out <- rs.x$rs.type
       rs.units <- rs.x$rs.units
       rs.method <- rs.x$rs.method
