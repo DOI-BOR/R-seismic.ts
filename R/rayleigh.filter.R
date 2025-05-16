@@ -33,7 +33,8 @@
 #' Based on the Normalized Inner Product.
 #' }
 #' @keywords ts
-
+#' @export rayleigh.filter
+#' @export
 rayleigh.filter <- function(a, b, dip, strike, pitch, reject=TRUE)
 {
   if ( missing(a) || missing(b) || missing(dip) )
@@ -104,6 +105,8 @@ rayleigh.filter <- function(a, b, dip, strike, pitch, reject=TRUE)
   return(F)
 }
 
+#' @export cos.filter
+#' @export
 cos.filter <- function(selector, v1, v2, v0=NA) {
   len <- length(selector)
   conv.filter <- as.double(rep(1, len))

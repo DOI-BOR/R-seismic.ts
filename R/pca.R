@@ -70,7 +70,8 @@
 #' Quantifying the similarity of seismic polarizations.
 #' }
 #' @keywords ts
-
+#' @export pca
+#' @export
 pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA,
                 w.len=5, analytic=FALSE)
 {
@@ -172,6 +173,8 @@ pca <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA,
 }
 
 # extract common polarization attributes from PCA eigenvectors and eigenvalues
+#' @export pca.attributes
+#' @export
 pca.attributes <- function(vectors, values) {
   if ( nrow(vectors) != 3 && ncol(vectors) != 3 )
     error("pca.attributes: vectors must be a 3 x 3 matrix")
@@ -241,6 +244,8 @@ pca.attributes <- function(vectors, values) {
 
 # Find the phase that maximizes the real part of a
 # complex vector, to implement Vidale (1986) method
+#' @export max.re
+#' @export
 max.re <- function(x,y,z) {
   if ( ! is.complex(x) || ! is.complex(y) || ! is.complex(z) )
     error("max.re: inputes must be complex")
@@ -262,6 +267,8 @@ max.re <- function(x,y,z) {
 
 
 # circular moving average (for when FFT convolution with a boxcar is just too fast)
+#' @export mavg
+#' @export
 mavg <- function(xt, w.len=1) {
   if ( ! is.numeric(xt) && ! is.complex(xt) )
     stop("mavg: xt must be numeric or complex")
@@ -292,6 +299,8 @@ mavg <- function(xt, w.len=1) {
 
 
 # make an mts from inputs
+#' @export get.xyz
+#' @export
 get.xyz <- function(xt, yt=NA, zt=NA, dt=NA, demean=TRUE, pct=NA, w.len=NA)
 {
   if ( ! is.na(pct) && (pct < 0 || pct > 50) )

@@ -193,7 +193,7 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
     for ( ii in 1:dim(xt)[2] ) {
       ok <- ! is.na(xt@data[,ii])
       ft <- .Call("CALLfilter_ts",
-                  as.double(xt[ok,ii]@data), as.double(dt), as.integer(order), as.character(pb.type),
+                  as.double(xt@data[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
                   as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
                   PACKAGE="seismic.ts")

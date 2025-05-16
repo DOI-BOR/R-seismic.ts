@@ -1,4 +1,7 @@
 # test berlage and AI
+library("splus2R")
+library(seismic.ts)
+
 amp <- 1500 # cm/s^2
 dt <- .01 # sec
 f0 <- 0.2 # Hz

@@ -1,4 +1,5 @@
-# library("splus2R", lib.loc="~/R/win-library/3.3")
+library("splus2R")
+library(seismic.ts)
 
 # test creating seismic test pulses using 1/2 Ricker, or Berlage wavelet
 mk.ricker = TRUE
@@ -76,12 +77,12 @@ plot(syn.m)
 readline(prompt = "hit Enter to continue")
 
 # plot amplitude spectrum of wavelet
-spec.u <- spec.pgram(signalSeries2ts(syn.m.u),plot=FALSE)
+spec.u <- spec.pgram(as.ts(syn.m.u),plot=FALSE)
 ymax <- 1.2 * 10 ^ round(log10(max(spec.u$spec)),digits=0)
 ymin <- 0.8 * 10 ^ (round(log10(max(spec.u$spec)),digits=0) - 8)
 plot(spec.u,ylab="power spectrum",xlab="frequency, hz",ylim=c(ymin,ymax))
 readline(prompt = "hit Enter to continue")
-spec.f <- spec.pgram(signalSeries2ts(syn.m),plot=FALSE)
+spec.f <- spec.pgram(as.ts(syn.m),plot=FALSE)
 plot(spec.f,ylab="power spectrum",xlab="frequency, hz",ylim=c(ymin,ymax))
 readline(prompt = "hit Enter to continue")
 
@@ -92,6 +93,6 @@ readline(prompt = "hit Enter to continue")
 
 tt <- seq(from=dt,to=length(filt.w)*dt,by=dt)
 tx <- data.frame(time_sec=tt,stress_Pa=filt.w)
-setwd("C:/Users/CWood/Documents/Studies/Research/Monticello")
+setwd("C:/Users/CWood/Documents/Research/Monticello LSDyna Validation")
 write.table(tx, eol="\n", sep=",", file="syn_rk_wavelet.csv", row.names=FALSE)
 

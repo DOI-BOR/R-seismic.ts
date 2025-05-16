@@ -1,4 +1,6 @@
 # test filter.llnl
+library("splus2R")
+library(seismic.ts)
 
 # make a delta function, centered in a window of 2000 points
 dirac <- c(rep(0,1000),1,rep(0,1000))
