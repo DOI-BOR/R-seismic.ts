@@ -14,8 +14,8 @@
 #' @param tw Window length, in seconds. Default is \code{length(xt) * dt - t0}.
 #' @param demean Set to \code{TRUE} if the windowed data should be demeaned. Default is
 #' \code{FALSE}.
-#' @param pct Percentage of the data window to apply a taper to. Must be
-#' between 0 and 50 percent. Default is 0 (no taper).
+#' @param pct Percentage of the data window to symmetrically apply a taper to. Must be
+#' between 0 and 50 percent. 0 means no tapering is done. Default is 50 (full taper).
 #' @param type Taper type. Supported types are \code{c("Hanning", "Bartlett",
 #' "Parzen", "Blackmann-Harris", "Exact_Blackmann")}. Case-insensitive, and only
 #' need to specify enough characters to be unique. Default is \code{"Hanning"}.
@@ -33,7 +33,9 @@ windowTs.default <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
                      pct=NA, type=NA, norm=NA) {
   if ( is.na(dt) )
     dt <- 0.01
-	multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
+  if ( ! is.na(pct) )
+    pct <- max(min(0., pct), 50.)
+  multi.trace <- is.matrix(xt) || length(dim(xt)) > 1
 	if ( multi.trace ) {
 	  xt.len <- dim(xt)[1]
 	  if ( xt.len < 3 )
@@ -76,6 +78,8 @@ windowTs.ts <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
   dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
+  if ( ! is.na(pct) )
+    pct <- max(min(0., pct), 50.)
   start <- start(xt)[1]
 
   if ( multi.trace == TRUE ) {
@@ -124,6 +128,8 @@ windowTs.signalSeries <- function(xt, dt=NA, t0=NA, tw=NA, demean=NA,
   dt <- deltat(xt)
   if ( is.na(dt) )
     dt <- 0.01
+  if ( ! is.na(pct) )
+    pct <- max(min(0., pct), 50.)
   start <- xt@positions@from
   units <- xt@units
   units.position <- xt@units.position

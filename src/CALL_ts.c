@@ -53,7 +53,7 @@ DllExport SEXP CALLwindow_ts(SEXP ts_d, SEXP dt_d, SEXP t0_d, SEXP tw_d,
 	double t0 = ! R_FINITE(asReal(t0_d)) ? 0 : REAL(t0_d)[0];
 	double tw = ! R_FINITE(asReal(tw_d)) ? len * dt - t0 : REAL(tw_d)[0];
 	BOOL demean = asLogical(demean_l) == NA_LOGICAL ? FALSE : LOGICAL(demean_l)[0];
-	double ptap = ! R_FINITE(asReal(ptap_d)) ? 0 : REAL(ptap_d)[0];
+	double ptap = ! R_FINITE(asReal(ptap_d)) ? 50 : REAL(ptap_d)[0];
 	TaperType type = asChar(type_s) == NA_STRING ? TW_HANNING : /* if not set, use Hanning */
 			strncasecmp(CHAR(STRING_ELT(type_s,0)), "ba", 2) == 0 ? TW_BARTLETT : /* Bartlett */
 			strncasecmp(CHAR(STRING_ELT(type_s,0)), "p", 1) == 0 ? TW_PARZEN : /* Parzen */
