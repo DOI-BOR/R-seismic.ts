@@ -198,7 +198,7 @@ DllExport void *window_ts(void *buf, int len, BOOL is_cmplx, double dt,
 		/* apply a taper to points within window */
 		int ii, kk;
 		int whlen;
-		double norm_wt;
+		double norm_wt = 1;
 		/* get taper weights */
 		wt = mk_taper(&whlen, winlen, type, ptap, do_norm, &norm_wt);
 

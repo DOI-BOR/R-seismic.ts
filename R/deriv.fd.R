@@ -13,7 +13,7 @@
 #' @param order Integer order of the finite difference. Currently only
 #' orders of 2, 4, 6, and 8 are supported. Default is 8.
 #' @param pct Percentage of data window to apply a Hanning taper. Must be
-#' between 0 and 50. Default is 0.5 percent.
+#' between 0 and 50. Default is 0 percent.
 #' @return the derivative of the windowed data, with the same object type as
 #' the input.
 #' @seealso \code{\link{ts}}, \code{\link{mts}}, \code{\link{signalSeries}},
@@ -22,7 +22,7 @@
 #'
 
 #' @describeIn deriv_fd.default differentiates a numeric \code{vector} or \code{matrix}.
-deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
+deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
   if ( is.na(dt) )
     dt <- 0.01
@@ -65,7 +65,7 @@ deriv_fd.default <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
 setGeneric("deriv_fd",def=deriv_fd.default)
 
 #' @describeIn deriv_fd.default differentiates a \code{ts} or \code{mts} object.
-deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
+deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
   multi.trace <- is.mts(xt) ||
@@ -114,7 +114,7 @@ deriv_fd.ts <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
 setMethod("deriv_fd","ts",deriv_fd.ts)
 
 #' @describeIn deriv_fd.default differentiates a \code{signalSeries} object.
-deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
+deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=NA) {
   order <- if ( order == 8 ) 3 else if ( order == 6 ) 2 else if ( order == 4 ) 1 else 0
 
   multi.trace <- is.mts(xt) ||
@@ -156,9 +156,10 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
       stop("input time series must have at least 3 valid points")
     dxdt.mts = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      ok <- ! is.na(xt@data[,ii])
+      xt.data = xt@data[,ii]
+      ok <- ! is.na(xt.data)
       dxdt <- .Call("CALLfd_deriv",
-                    as.double(xt@data[ok,ii]), as.double(dt), as.integer(nd),
+                    as.double(xt.data[ok]), as.double(dt), as.integer(nd),
                     as.integer(order),
                     PACKAGE="seismic.ts")
       if ( is.null(dxdt.mts) )
@@ -169,15 +170,16 @@ deriv_fd.signalSeries <- function(xt, dt=NA, nd=1, order=8, pct=0.5) {
     colnames(dxdt.mts) <- colnames(xt@data)
     dxdt <- dxdt.mts
   } else {
-    ok <- ! is.na(xt@data)
-    xt.len <- length(xt[ok])
+    xt.data = xt@data
+    ok <- ! is.na(xt.data)
+    xt.len <- length(xt.data[ok])
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     dxdt <- .Call("CALLfd_deriv",
-                  as.double(xt@data[ok]), as.double(dt), as.integer(nd),
+                  as.double(xt.data[ok]), as.double(dt), as.integer(nd),
                   as.integer(order),
                   PACKAGE="seismic.ts")
-    names(dxdt) <- names(xt@data)
+    names(dxdt) <- names(xt.data)
   }
   if ( is.finite(pct) && pct > 0 )
     dxdt <- hanning(dxdt,pct)

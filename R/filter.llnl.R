@@ -191,9 +191,10 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
       stop("input time series must have at least 3 valid points")
     ft.mts = NULL
     for ( ii in 1:dim(xt)[2] ) {
-      ok <- ! is.na(xt@data[,ii])
+      xt.data = xt@data[,ii]
+      ok <- ! is.na(xt.data)
       ft <- .Call("CALLfilter_ts",
-                  as.double(xt@data[ok,ii]), as.double(dt), as.integer(order), as.character(pb.type),
+                  as.double(xt.data[ok]), as.double(dt), as.integer(order), as.character(pb.type),
                   as.character(filt.type), as.double(f.lo), as.double(f.hi),
                   as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
                   PACKAGE="seismic.ts")
@@ -205,16 +206,17 @@ filter.llnl.signalSeries <- function(xt, dt=NA, order=NA, pb.type=NA, filt.type=
     colnames(ft.mts) <- colnames(xt@data)
     ft <- ft.mts
   } else {
-    ok <- ! is.na(xt@data)
-    xt.len <- length(xt[ok])
+    xt.data = xt@data
+    ok <- ! is.na(xt.data)
+    xt.len <- length(xt.data[ok])
     if ( xt.len < 3 )
       stop("input time series must have at least 3 valid points")
     ft <- .Call("CALLfilter_ts",
-                as.double(xt[ok]@data), as.double(dt), as.integer(order), as.character(pb.type),
+                as.double(xt.data[ok]), as.double(dt), as.integer(order), as.character(pb.type),
                 as.character(filt.type), as.double(f.lo), as.double(f.hi),
                 as.character(dir), as.double(cheb.sb.atten), as.double(cheb.tr.bw),
                 PACKAGE="seismic.ts")
-    names(ft) <- names(xt@data)
+    names(ft) <- names(xt.data)
   }
   ft <- signalSeries(ft, from=start, by=dt, units=units, units.position=units.position)
 
