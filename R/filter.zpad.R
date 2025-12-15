@@ -11,7 +11,7 @@
 #' @return The filtered time series.
 #' @seealso \code{\link{filter}}
 #' @keywords ts
-
+#' @export filter.zpad
 filter.zpad <- function(x, filt, truncate = F) {
 	x.len <- length(x)
 	filt.len <- length(filt)

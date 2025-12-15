@@ -2,6 +2,7 @@
 #' univariate equally-spaced series. The time series can optionally be
 #' augmented and/or windowed beforehand.
 #'
+#' @description
 #' \code{lag.ccf} finds the lag of the maximum and minimum of the
 #' cross-correlation function between two univariate series with uniform sample
 #' interval. The sign of the returned lag gives the offset, in samples, of
@@ -11,6 +12,14 @@
 #' maximum. On the other hand, if y is a reversed polarity copy of x, i.e.,
 #' \code{y = -x}, then 10 (-10) is returned for the lag of the minimum.
 #'
+#' @usage lag.ccf(
+#'  xt, yt,
+#'  xy.lag = NA,
+#'  w.beg = NA,
+#'  w.len = NA,
+#'  pct = NA,
+#'  lag.max = NA,
+#'  aug.factor = NA )
 #' @param xt required (first) equally-spaced series. Must convert to numeric vector.
 #' @param yt required (second) equally-spaced series. Must convert to numeric vector.
 #' @param xy.lag (optional) integer number of samples to delay (positive) or
@@ -32,11 +41,12 @@
 #' @param aug.factor Augmentation factor (see \code{\link{augment}}). Default is NA.
 #' @return Returns the list \code{(max.lag, max.ccf, min.lag, min.ccf, w.len,
 #' lag.max, aug.factor)}
-#' with the lags and values of the maximum and minimum of the CCF, as well as
+#' with the lags and values of the maximum an d minimum of the CCF, as well as
 #' the lengths of the comparison window and maximum lag considered. The returned
 #' lags incorporate whatever value \code{xy.lag} is set to, and therefore represent
 #' the lags of the unshifted time series.
-#'
+#' @keywords ts cross-correlation
+#' @export lag.ccf
 lag.ccf <- function(xt, yt, xy.lag = NA, w.beg = NA, w.len = NA,
                       pct = NA, lag.max = NA, aug.factor = NA) {
   # xy.lag is the delay, in samples, to apply to series y. A positive lag results in
