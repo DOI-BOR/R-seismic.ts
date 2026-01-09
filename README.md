@@ -1,0 +1,1 @@
+This repo contains the R package seismic.ts (seismic time series analysis), which provides methods for use in seismic signal processing, including windowing, tapering, filtering, response spectra, polarization analysis, and more.
